@@ -39,3 +39,14 @@ url.datos <- paste0(url.principal,elementos.href)
 # Creacion de tablas ------------------------------------------------------
 # Ahora podemos acceder a las tablas iterando por url.datos
 lista.tablas <- lapply(url.datos, function(x) read_html(x) %>% html_table())
+
+##-----HAGAMOS SCRAPPING EN UN SOLO LINK PARA ENCONTRAR LA RUTA-----
+#el caso del link #1
+url_1=url.datos[1]
+html_1<- read_html(url_1)
+
+#A través del Xpath podemos llevar hasta la ruta antes de la tabla
+antesde<-html_1 %>% html_nodes(xpath ='/html/body/div/div/div[2]/div')
+
+#Aquí no podemos seguir la ruta con xpath, dado que el siguiente elemento es (xmlattributes)
+#estoy agregando esto para entender
