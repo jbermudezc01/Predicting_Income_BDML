@@ -1,6 +1,6 @@
 ##########################################################
-# Web scrapping y manejo de datos
-# Autores: Juan Pablo Bermudez. Lina Bautista. 
+# Web scrapping
+# Autores: Juan Pablo Bermudez. Lina Bautista. Esteban Meza. Pharad Sebastian Escobar
 ##########################################################
 
 
