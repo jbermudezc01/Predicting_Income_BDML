@@ -39,5 +39,3 @@ url.datos <- paste0(url.principal,elementos.href)
 # Creacion de tablas ------------------------------------------------------
 # Ahora podemos acceder a las tablas iterando por url.datos
 lista.tablas <- lapply(url.datos, function(x) read_html(x) %>% html_table())
-
-
