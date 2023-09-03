@@ -44,14 +44,14 @@ url.tablas <- unlist(lapply(url.datos, function(x) read_html(x) %>%
                               html_nodes(xpath ='/html/body/div/div/div[2]/div') %>% 
                               html_attr("w3-include-html")))
 
+URL <- paste0(url.principal,url.tablas)
 
-##-----HAGAMOS SCRAPPING EN UN SOLO LINK PARA ENCONTRAR LA RUTA-----
-#el caso del link #1
-url_1=url.datos[1]
-html_1<- read_html(url_1)
+# Ahora por cada url en <URL> vamos a leer la tabla
+lista.tablas <- lapply(URL, function(x){
+  df.lista <- read_html(x) %>% html_table()
+  tabla    <- df.lista[[1]]
+  return(tabla)
+})
 
-#A través del Xpath podemos llevar hasta la ruta antes de la tabla
-antesde<-html_1 %>% html_nodes(xpath ='/html/body/div/div/div[2]/div')
-
-#Aquí no podemos seguir la ruta con xpath, dado que el siguiente elemento es (xmlattributes)
-#estoy agregando esto para entender
+#Unimos todas las tablas dentro de nuestra lista <tabla>
+base.datos <- do.call(bind_rows, lista.tablas)
