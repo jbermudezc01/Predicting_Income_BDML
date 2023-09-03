@@ -53,5 +53,8 @@ lista.tablas <- lapply(URL, function(x){
   return(tabla)
 })
 
-#Unimos todas las tablas dentro de nuestra lista <tabla>
-base.datos <- do.call(bind_rows, lista.tablas)
+# Unimos todas las tablas dentro de nuestra lista <tabla>
+base.datos.original <- do.call(bind_rows, lista.tablas)
+
+# Guardar la tabla en el directorio
+save(base.datos.original,file = paste0(getwd(),'/stores/base_datos_original.RData'))
