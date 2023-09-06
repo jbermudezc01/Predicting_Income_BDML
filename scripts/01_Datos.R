@@ -1,6 +1,6 @@
 ##########################################################
-# Web scrapping y manejo de datos
-# Autores: Juan Pablo Bermudez. Lina Bautista. 
+# Web scrapping
+# Autores: Juan Pablo Bermudez. Lina Bautista. Esteban Meza. Pharad Sebastian Escobar
 ##########################################################
 
 
@@ -37,6 +37,24 @@ elementos.href <- elementos.filtrados %>%
 url.datos <- paste0(url.principal,elementos.href)
 
 # Creacion de tablas ------------------------------------------------------
-# Ahora podemos acceder a las tablas iterando por url.datos
-lista.tablas <- lapply(url.datos, function(x) read_html(x) %>% html_table)
+# Ahora podemos acceder a las tablas iterando por url.datos.
+# En primer lugar usamos <read_html> para leer el html, posteriormente usamos <html_nodes> con el xpath donde se 
+# encuentra la tabla, y por ultimo utilizamos <html_attr> para encontrar el link del archivo de cada chunk de datos
+url.tablas <- unlist(lapply(url.datos, function(x) read_html(x) %>% 
+                              html_nodes(xpath ='/html/body/div/div/div[2]/div') %>% 
+                              html_attr("w3-include-html")))
 
+URL <- paste0(url.principal,url.tablas)
+
+# Ahora por cada url en <URL> vamos a leer la tabla
+lista.tablas <- lapply(URL, function(x){
+  df.lista <- read_html(x) %>% html_table()
+  tabla    <- df.lista[[1]]
+  return(tabla)
+})
+
+# Unimos todas las tablas dentro de nuestra lista <tabla>
+base.datos.original <- do.call(bind_rows, lista.tablas)
+
+# Guardar la tabla en el directorio
+save(base.datos.original,file = paste0(getwd(),'/stores/base_datos_original.RData'))
