@@ -79,7 +79,8 @@ box_plot <- ggplot(data=base.datos.mayor.edad , mapping = aes(as.factor(estrato1
 box_plot
 
 # Exportar a un archivo RDS
+base.datos.salario <- base.datos.mayor.edad
 saveRDS(base.datos.salario, file = "base.datos.salario.rds")
 
 # Guardar en carpeta stores 
-save(bd_m_18age,file = paste0(getwd(),'/stores/base.datos.salario.RData'))
+save(base.datos.salario,file = paste0(getwd(),'/stores/base.datos.salario.RData'))
