@@ -1,111 +1,85 @@
-##########################################################
-# Manejo de datos
-# Autores: Juan Pablo Bermudez. Lina Bautista. Esteban Meza. Pharad Sebastian Escobar
-##########################################################
+### limpieza de datos ####
 
+# limpiar espacio de trabajo 
 rm(list=ls())
 cat('\014')
 
-# Cargar librerias --------------------------------------------------------
-library(tidyverse) # Librerias del tidyverse, principalmente dplyr para manejo de datos
-library(rvest)     #Para web scrapping
-library(ggplot2)
-library(skimr)
+# Cargar librerias 
+require(pacman)
+p_load(rio, # import/export data
+       tidyverse, # tidy-data
+       ggplot2, # plotting
+       skimr) # summary data 
 
-# Cargar la base de datos -------------------------------------------------
-# La base de datos la obtuvimos haciendo web scrapping
+# Cargar la base de datos 
 load(paste0(getwd(),'/stores/base_datos_original.RData'))
 
 # filtrar la base de datos para seleccionar individuos mayores de 18 anhos
 base.datos.mayor.edad <- base.datos.original %>% 
-  dplyr::filter(age > 18)
+dplyr::filter(age > 18)
+base.datos.mayor.edad <-  as.tibble(base.datos.mayor.edad)
 
-##### limpiar datos #####
+#### limpieza de datos
 
-# inspeccionar los datos 
-
-glimpse(base.datos.mayor.edad) # reporte especifico de la base de datos 
+## inspeccionar datos
 skim(base.datos.mayor.edad) %>% head()
+## inspeccionar variable de interes 
+summary(base.datos.mayor.edad$y_salary_m_hu)
 
-# identificar valor atipicos en variables de interés: salario e ingreso total 
+#### tratar los NA 
 
-## realizamos  histrogramas de las variables de interés para identificar valores extremos 
-# histograma variable salario por hora
-Histrograma_salario_h <- ggplot(data=base.datos.mayor.edad) +
-  geom_histogram(mapping = aes(x= y_salary_m_hu , group=as.factor(sex) , fill=as.factor(sex)))
-Histrograma_salario_h
-# histograma varibale salario mensual
-Histrograma_salario_m <- ggplot(data=base.datos.mayor.edad) +
-  geom_histogram(mapping = aes(x= y_salary_m , group=as.factor(sex) , fill=as.factor(sex)))
-Histrograma_salario_m
+## identificar los  NA
 
-# utilizamos el rando intercuantilico para clasficar los valores (atipicos o no)
-# Definir una función para etiquetar variables como atípicas o no atípicas
-valores_atipicos <- function(variable) {
-  q1 <- quantile(variable, 0.25, na.rm =T)
-  q3 <- quantile(variable, 0.75, na.rm =T)
-  iqr <- q3 - q1
-  umbral_superior <- q3 + 1.5 * iqr
-  umbral_inferior <- q1 - 1.5 * iqr
-  etiquetas <- ifelse(variable > umbral_superior | variable < umbral_inferior, "Atípica", "No Atípica")
-  return(etiquetas)
+### creamos vector con variables de interés para identificar la magnitud NA 
+
+variables_interes <- c("estrato1","sex","age",
+                      "totalHoursWorked","pet","college","maxEducLevel",
+                      "sizeFirm","oficio","microEmpresa","y_salary_m","y_salary_m_hu",
+                       "y_salarySec_m","y_total_m","y_total_m_ha")
+
+#Crear una lista para almacenar los resultados
+resultados <-  list()
+
+# Iterar a través de las variables
+
+for (variable in variables_interes) {
+  resultado <- is.na(base.datos.mayor.edad[[variable]]) %>% table()
+  resultados[[variable]] <- resultado
 }
+resultados
 
-# Aplicar la función para etiquetar variables a todas las columnas numéricas del DataFrame
+### tratar los valores NA imputando con la media 
 
-# Llamada a lapply sin los paréntesis y proporcionando la función valores_atipicos como objeto
-resultado_valores_atipicos <- lapply(base.datos.mayor.edad[, c("y_salary_m_hu",
-                                                               "y_salary_m",
-                                                               "y_total_m",
-                                                               "y_total_m_ha")],
-                                     valores_atipicos)
-table(resultado_valores_atipicos)
+# Reemplaza los NA por la media de cada columna
+base.datos.mayor.edad <- base.datos.mayor.edad %>%
+  mutate_all(~ ifelse(is.na(.), mean(., na.rm = TRUE), .))
 
-# se evidencio presencia de valores extremos cercanos e iguales a cero en las cuatro variables
-# en ese sentido, se procede a suavizar su efecto transformando a log_natural de los valores 
+### convertir variables de interés a logaritmo natural 
+
 
 ## transformar variables de interés a logaritmo natural para reducir la influencia de valores extremos =0 
 base.datos.mayor.edad= base.datos.mayor.edad %>% 
   mutate(log_y_salary_h = log(y_salary_m_hu),
-         log_y_salaty_m = log(y_salary_m),
+         log_y_salary_m = log(y_salary_m),
          log_y_total_m = log(y_total_m),
          log_y_total_h = log(y_total_m_ha))
 
-### Identificar y tratar valores faltantes NA
+### varificar la transformación de las variables de interés
 
-# calcular el porcentjar de por cada variable
-missing_values <- base.datos.mayor.edad %>%
-  summarise_all(~ sum(is.na(.)) / n()) %>%
-  gather(variable, porcentaje_faltantes)
+# histograma variable logaritmo salario por hora x sex
 
-# trata valores NA 
+Histrograma_salario_h <- ggplot(data=base.datos.mayor.edad) +
+  geom_histogram(mapping = aes(x=log_y_salary_h , group=as.factor(sex) , fill=as.factor(sex)))
+Histrograma_salario_h
 
-# Regla de tratamiento: tratar los valores NA se imputa con la media de la variables
-# si la cantidad de missing values no supera el 10% de las observaciones para cada vairables
-# para este caso, la cantidad de NA para todas las variables esta en un rango de 0 a 9,1%.
+# boxplot_variable ogaritmo salario por hora x estrato
 
-## imputar media a variables numericas 
-#identficar las variables numericas
-variables_numericas <-  sapply(base.datos.mayor.edad, is.numeric)
-# calcular la media de los variables, se omite los valores faltantes
-medias <- colMeans(base.datos.mayor.edad[, variables_numericas], na.rm = TRUE)
-# imputar la media a los valores falntes en las variables numericas 
-base.datos.mayor.edad[, variables_numericas] <- lapply(base.datos.mayor.edad[, variables_numericas], function(x) {
-  ifelse(is.na(x), medias , x)
-})
-## Revisamos el procedimiento anterior
-MS <- colSums(is.na(base.datos.mayor.edad))
-MS 
-
-### crear un subset con variables de interes 
-
-bd_income <- base.datos.mayor.edad %>%
-  select(-p6050:-p6240)%>%
-  select(-p6426)%>%
-  select(-p6500:-p7510s7a1)
+box_plot <- ggplot(data=base.datos.mayor.edad , mapping = aes(as.factor(estrato1) , log_y_salary_h)) + 
+  geom_boxplot() 
+box_plot
 
 # Exportar a un archivo RDS
-saveRDS(bd_income, file = "bd_income.rds")
+saveRDS(base.datos.salario, file = "base.datos.salario.rds")
 
 # Guardar en carpeta stores 
-save(bd_m_18age,file = paste0(getwd(),'/stores/bd_income.RData'))
+save(bd_m_18age,file = paste0(getwd(),'/stores/base.datos.salario.RData'))
