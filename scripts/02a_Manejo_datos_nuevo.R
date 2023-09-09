@@ -69,5 +69,22 @@ bd.reducida <- bd.reducida %>%
     maxEducLevel     = ifelse(is.na(maxEducLevel), mode(maxEducLevel), maxEducLevel)
   )
 
+# Segunda opcion:
+# Como el resto de variables que quedan son salarios, se puede Reemplazar los NA por la media de cada columna
+bd.media.imputada <- bd.reducida %>%
+  mutate_all(~ ifelse(is.na(.), mean(., na.rm = TRUE), .))
 
+## transformar variables de interés a logaritmo natural para reducir la influencia de valores extremos =0 
+bd.sin.na <- bd.sin.na %>% 
+  mutate(log_y_salary_h = log(y_salary_m_hu),
+         log_y_salary_m = log(y_salary_m))
+
+bd.media.imputada <- bd.media.imputada %>% 
+  mutate(log_y_salary_h = log(y_salary_m_hu),
+         log_y_salary_m = log(y_salary_m))
+
+# Exportar a stores -------------------------------------------------------
+# CSV
+write.csv(bd.sin.na, file = paste0(getwd(),'/stores/base_datos_sin_na.csv'))
+write.csv(bd.media.imputada, file = paste0(getwd(),'/stores/base_datos_imputando_na.csv'))
 
