@@ -49,19 +49,21 @@ round(apply(bd.reducida,MARGIN = 2, function(x) sum(is.na(x)))/nrow(bd.reducida)
 
 # Reemplazar por la media las variables con NA -----------------------
 # <seguridadsocial> es categorica por lo que cambiamos por la moda
-bd.reducida$seguridadsocial <- ifelse(is.na(bd.reducida$seguridadsocial),which.max(table(bd.reducida$seguridadsocial)),
-                                      bd.reducida$seguridadsocial)
+bd.sin.na <- bd.reducida
+bd.sin.na$seguridadsocial <- ifelse(is.na(bd.sin.na$seguridadsocial),which.max(table(bd.sin.na$seguridadsocial)),
+                                      bd.sin.na$seguridadsocial)
 
 # Como el resto de variables que quedan son salarios, se puede Reemplazar los NA por la media de cada columna
-bd.reducida <- bd.reducida %>%
+bd.sin.na <- bd.sin.na %>%
   mutate_all(~ ifelse(is.na(.), mean(., na.rm = TRUE), .))
 
 ## transformar variables de interés a logaritmo natural para reducir la influencia de valores extremos =0 
-bd.reducida <- bd.reducida %>% 
+bd.sin.na <- bd.sin.na %>% 
   mutate(log_y_salary_h = log(y_salary_m_hu),
          log_y_salary_m = log(y_salary_m),
          log_y_total_m = log(y_total_m),
          log_y_total_h = log(y_total_m_ha))
+save(bd.reducida, bd.sin.na , file = paste0(getwd(),('/stores/base.datos.reducida.RData')))
 
 
 # histograma variable logaritmo salario por hora x sex
