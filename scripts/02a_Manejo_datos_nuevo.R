@@ -24,13 +24,13 @@ base.datos.mayor.edad <- base.datos.original %>%
   dplyr::filter(age > 18)
 base.datos.mayor.edad <-  as.tibble(base.datos.mayor.edad)
 
-
 # Limpieza base de datos --------------------------------------------------
 # En primer lugar seleccionamos las variables que nos interesan de la base de datos
 bd.interes <- base.datos.mayor.edad %>% 
-  select(age, urbano=clase, college, cotPension, cuentaPropia, depto, directorio, dsi,estrato=estrato1, formal, 
-         hoursWorkUsual, maxEducLevel, oficio, orden, salud = p6090, seguridadsocial = p6100, sex, y_total_m , 
-         microEmpresa, pet, sizeFirm, y_salary_m, y_salary_m_hu, y_total_m_ha)
+  select(age, urban=clase, college, cotPension, cuentaPropia, depto, directorio, dsi,estrato=estrato1, formal, 
+         inac, ingtot,hoursWorkUsual, maxEducLevel, oficio, orden, salud = p6090, seguridadsocial = p6100, sex, 
+         microEmpresa, sizeFirm, y_salary_m, y_salary_m_hu, sub.alimentacion = p6585s1, sub.transporte=p6585s2,
+         sub.familiar = p6585s3, sub.educativo = p6585s4)
 
 # Se tiene pensado utilizar y_total_m como variable de salario ya que tiene en cuenta a los hogares que trabajan como
 # independientes. Aparte, tiene menor numero de NA
@@ -47,40 +47,27 @@ bd.reducida <- bd.interes %>%
 round(apply(bd.reducida,MARGIN = 2, function(x) sum(is.na(x)))/nrow(bd.reducida),2)
 
 
-# Reemplazar por la media las variables con NA -----------------------
+# Reemplazar por la media las variables con NA  o crear base sin NA -----------------------
+
+# Crear una base de datos sin <NA> en los salarios, porque tener 40% de NA nos parece imputar mucho
+bd.sin.na <- bd.reducida %>% 
+  dplyr::filter(!is.na(y_salary_m))
+
 # <seguridadsocial> es categorica por lo que cambiamos por la moda
-bd.sin.na <- bd.reducida
-bd.sin.na$seguridadsocial <- ifelse(is.na(bd.sin.na$seguridadsocial),which.max(table(bd.sin.na$seguridadsocial)),
-                                      bd.sin.na$seguridadsocial)
 
-# Como el resto de variables que quedan son salarios, se puede Reemplazar los NA por la media de cada columna
-bd.sin.na <- bd.sin.na %>%
-  mutate_all(~ ifelse(is.na(.), mean(., na.rm = TRUE), .))
+mode <- function(x) {
+  return(as.numeric(names(which.max(table(x)))))
+}
 
-## transformar variables de interés a logaritmo natural para reducir la influencia de valores extremos =0 
-bd.sin.na <- bd.sin.na %>% 
-  mutate(log_y_salary_h = log(y_salary_m_hu),
-         log_y_salary_m = log(y_salary_m),
-         log_y_total_m = log(y_total_m),
-         log_y_total_h = log(y_total_m_ha))
-save(bd.reducida, bd.sin.na , file = paste0(getwd(),('/stores/base.datos.reducida.RData')))
+bd.reducida <- bd.reducida %>%
+  mutate(
+    seguridadsocial  = ifelse(is.na(seguridadsocial), mode(seguridadsocial), seguridadsocial),
+    sub.alimentacion = ifelse(is.na(sub.alimentacion), mode(sub.alimentacion), sub.alimentacion),
+    sub.transporte   = ifelse(is.na(sub.transporte), mode(sub.transporte), sub.transporte),
+    sub.educativo    = ifelse(is.na(sub.educativo), mode(sub.educativo), sub.educativo),
+    sub.familiar     = ifelse(is.na(sub.familiar), mode(sub.familiar), sub.familiar),
+    maxEducLevel     = ifelse(is.na(maxEducLevel), mode(maxEducLevel), maxEducLevel)
+  )
 
 
-# histograma variable logaritmo salario por hora x sex
 
-Histrograma_salario_h <- ggplot(data=base.datos.mayor.edad) +
-  geom_histogram(mapping = aes(x=log_y_salary_h , group=as.factor(sex) , fill=as.factor(sex)))
-Histrograma_salario_h
-
-# boxplot_variable ogaritmo salario por hora x estrato
-
-box_plot <- ggplot(data=base.datos.mayor.edad , mapping = aes(as.factor(estrato1) , log_y_salary_h)) + 
-  geom_boxplot() 
-box_plot
-
-# Exportar a un archivo RDS
-base.datos.salario <- base.datos.mayor.edad
-saveRDS(base.datos.salario, file = "base.datos.salario.rds")
-
-# Guardar en carpeta stores 
-save(base.datos.salario,file = paste0(getwd(),'/stores/base.datos.salario.RData'))
