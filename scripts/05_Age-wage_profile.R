@@ -147,7 +147,6 @@ p_load("boot")
 #boot(data, statistic, R)
 
 funcion_pa<-function(data,index){
-  
   b1<-coef(lm(log_y_salary_h~age+age2, data = data, subset = index))[2]
   b2<-coef(lm(log_y_salary_h~age+age2, data = data, subset = index))[3]
   (-b1/(2*b2)) 
@@ -156,6 +155,30 @@ funcion_pa<-function(data,index){
 funcion_pa(base_datos_imputando_na, 1:nrow(base_datos_imputando_na))
 #si es la misma que teníamos al principio
 
-boot(base_datos_imputando_na, funcion_pa, R=2000)
+#Hacemos el boot de forma automática con nuestra función
+boot_i<-boot(base_datos_imputando_na, funcion_pa, R=2000)
+boot_s<-boot(base_datos_sin_na, funcion_pa, R=2000)
 
-boot(base_datos_sin_na, funcion_pa, R=2000)
+#Creación del dataframe para generar los intervalos de confianza:
+mat = matrix(ncol = 0, nrow = 2000)
+IC<-data.frame(mat)
+
+#Intervalos para datos con media inputada a los NA
+SE_i<-as.numeric(sqrt(var(boot_i[["t"]])))
+IC$bootstrap_i<-boot_i[["t"]]
+IC$LI_i<-boot_i[["t"]]-qnorm(0.05/2)*SE_i
+IC$LS_i<-boot_i[["t"]]+qnorm(0.05/2)*SE_i
+
+#Intervalos para datos a los que se les quitaron los NA
+SE_s<-as.numeric(sqrt(var(boot_s[["t"]])))
+IC$bootstrap_s<-boot_s[["t"]]
+IC$LI_s<-boot_s[["t"]]-qnorm(0.05/2)*SE_s
+IC$LS_s<-boot_s[["t"]]+qnorm(0.05/2)*SE_s
+
+
+
+
+
+
+
+
