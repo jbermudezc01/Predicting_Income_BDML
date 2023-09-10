@@ -66,30 +66,96 @@ ggplot(base_datos_sin_na, aes(y = log_y_salary_h, x = age)) +
        y = "Log(wage_h)",
        title = "Valores predichos del salario eliminando NAs") # labels
 
+#--------------Bootstrap para la "peak age" con Intervalos de confianza
+
+#sabemos que podemos encontrar la peak age al derivar nuestra regresión respecto a la edad
+#dln(w)/dage=b1+2b2edad=0
+#edad=-b1/(2*b2)
+
+#Obtenemos los coeficientes y los extraemos a escalares
+#----Para base de datos con media imputada-----
+coef_imputando
+b1_i<-coef_imputando[2]
+b2_i<-coef_imputando[3]
+
+peak_age_i=(-b1_i/(2*b2_i))
+peak_age_i
+
+B<-2000
+peak_age_i_vector<-rep(0,B)
+lower_i<-rep(0,B)
+upper_i<-rep(0,B)
+
+for(i in 1:B){
+  db_sample<- sample_frac(base_datos_imputando_na,size=1,replace=TRUE) #takes a sample with replacement of the same size of the original sample (1 or 100%)
+  f<-lm(log_y_salary_h~age+age2,db_sample)# estimates the models
+  coefs<-f$coefficients # gets the coefficient of interest that coincides with the elasticity of demand
+  b1<-coefs[2]
+  b2<-coefs[3]
+  peak_age_i_vector[i]<-(-b1/(2*b2)) #saves it in the above vector
+}
+
+mean(peak_age_i_vector)
+SE_peakage_i<-sqrt(var(peak_age_i_vector));SE_peakage_i
+
+#Con el error estándar que sacamos del bootstrap podemos crear intervalos de 
+#confianza para cada submuestra generada por el bootstrap
+for(i in 1:B){
+  lower_i[i]<- peak_age_i_vector[i]-qnorm(0.05/2)*SE_peakage_i
+  upper_i[i]<- peak_age_i_vector[i]+qnorm(0.05/2)*SE_peakage_i
+}
+
+
+
+#----Para base de datos eliminando NA-----
+coef_sin_na
+b1_s<-coef_sin_na[2]
+b2_s<-coef_sin_na[3]
+
+peak_age_s=(-b1_s/(2*b2_s))
+peak_age_s
+
+B<-2000
+peak_age_s_vector<-rep(0,B)
+lower_s<-rep(0,B)
+upper_s<-rep(0,B)
+
+for(i in 1:B){
+  db_sample<- sample_frac(base_datos_sin_na,size=1,replace=TRUE) #takes a sample with replacement of the same size of the original sample (1 or 100%)
+  f<-lm(log_y_salary_h~age+age2,db_sample)# estimates the models
+  coefs<-f$coefficients # gets the coefficient of interest that coincides with the elasticity of demand
+  b1<-coefs[2]
+  b2<-coefs[3]
+  peak_age_s_vector[i]<-(-b1/(2*b2)) #saves it in the above vector
+}
+
+mean(peak_age_s_vector)
+SE_peakage_s<-sqrt(var(peak_age_s_vector));SE_peakage_s
+
+#Con el error estándar que sacamos del bootstrap podemos crear intervalos de 
+#confianza para cada submuestra generada por el bootstrap
+for(i in 1:B){
+  lower_s[i]<- peak_age_s_vector[i]-qnorm(0.05/2)*0.8302136
+  upper_s[i]<- peak_age_s_vector[i]+qnorm(0.05/2)*SE_peakage_s
+}
 
 
 
 
-#Gráfico manual
-# Building the plot by ourselves
-preplot = data.frame(
-  Features = rownames(summary_imputado),
-  Estimate = summary_imputado[,'Estimate'],
-  std_error = summary_imputado[,'Std. Error'])
+##------------Bootstrap automático:
+p_load("boot")
+#boot(data, statistic, R)
 
-# The function qnorm() find the boundary value that determines the area 
-# under the normal density curve before alpha/2.
-alpha = 0.05 # 95% Confidence Interval
-preplot$lower = preplot$Estimate - qnorm(alpha/2) * preplot$std_error
-preplot$upper = preplot$Estimate + qnorm(alpha/2) * preplot$std_error
-preplot = preplot[!(preplot$Features == '(Intercept)'),]
+funcion_pa<-function(data,index){
+  
+  b1<-coef(lm(log_y_salary_h~age+age2, data = data, subset = index))[2]
+  b2<-coef(lm(log_y_salary_h~age+age2, data = data, subset = index))[3]
+  (-b1/(2*b2)) 
+}
 
+funcion_pa(base_datos_imputando_na, 1:nrow(base_datos_imputando_na))
+#si es la misma que teníamos al principio
 
-ggplot(preplot) +
-  geom_vline(xintercept = 0, linetype = 4) + #adds a vertical line at zero
-  geom_point(aes(x = Estimate, y = Features)) + #point estimate
-  geom_segment(aes(y = Features, yend = Features, x = lower, xend = upper),
-               arrow = arrow(angle = 90, ends = 'both', 
-                             length = unit(0.1, 'cm'))) + #segment representing the CI
-  labs(x = 'Coeffienient estimate') +
-  theme_bw() 
+boot(base_datos_imputando_na, funcion_pa, R=2000)
+
+boot(base_datos_sin_na, funcion_pa, R=2000)
