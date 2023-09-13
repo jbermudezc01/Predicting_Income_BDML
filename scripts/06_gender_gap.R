@@ -2,6 +2,7 @@
 #### brechas salariales de género ######
 
 # cargamos las librerias 
+install.packages("pacman")
 require(pacman)
 p_load("tidyverse","rio","stargazer","rvest", "ggplot2","skimr", "boot")
 
@@ -12,7 +13,7 @@ base_datos_imputando_na <- read_csv("stores/base_datos_imputando_na.csv")
 # transformación de varibles ditomicas y dicotomicas 
 # transformar variables dicotomicas para tomen valores 0 y 1 
 # base de datos con na imputados
-var_dico<- c("cotPension","salud","sub.alimentacion",
+var_dico<- c("sex","college","cuentaPropia","formal","microEmpresa","cotPension","salud","sub.alimentacion",
                  "sub.educativo","sub.familiar","sub.transporte")
 base_datos_imputando_na[,var_dico] = base_datos_imputando_na[,var_dico] -1
 base_datos_sin_na[,var_dico] = base_datos_sin_na[,var_dico] -1
@@ -116,9 +117,72 @@ mean(e_reg3.1)
 sqrt(var(e_reg3.1))
 
 
-##### estimar edad-salario por género 
+##### estimar edad-salario pico por género 
 
-# incluir la variable age^2 en las estimaciones
-# crear variable 
+# crear variable age^2 en base de datos 
+base_datos_imputando_na$age2 <- (base_datos_imputando_na$age)^2
+base_datos_sin_na$age2 <- (base_datos_sin_na$age)^2
+
+# traer etimaciones edad-salario del punto 3 
+# estimados la edad pico para mujeres 
+
+# base datos con na imputados 
+sub_set_sex <- subset(df_gap_na, sex == "1")
+edad_salario_w <- lm(log_y_salary_h ~age+age2, data = sub_set_sex, x = TRUE)
+
+# Estimar con Na eliminados
+su_set_sex <- subset(df_gap_no, sex == "1")
+edad_salario_w_no <- lm(log_y_salary_h ~age+age2, data = su_set_sex, x = TRUE)
+
+# creamos lista de coeficientes para la estimación con bd con na imputados 
+
+coef_na <- edad_salario_w$coefficients
+coef_no <- edad_salario_w_no$coefficients
+
+# estimamos edad pico  con base de datos con na imputados 
+coef_na
+b1_i <-coef_na[2]
+b2_i <-coef_na[3]
+edad_pico <-(-b1_i/(2*b2_i))
+edad_pico # 51.7
+
+# estimamos edad pico  con base de datos con na eliminados 
+coef_no
+b1_i <-coef_no[2]
+b2_i <-coef_no[3]
+edad_pico_w <-(-b1_i/(2*b2_i))
+edad_pico_w # 49.5 
+
+# estimamos edad pico para los hombres 
+
+sub_set_m <- subset(base_datos_imputando_na, sex == "0")
+edad_salario_m <- lm(log_y_salary_h ~age+age2, data = sub_set_m, x = TRUE)
+
+# Estimar con Na eliminados
+su_set_m <- subset(base_datos_sin_na, sex == "0")
+edad_salario_m_no <- lm(log_y_salary_h ~age+age2, data = su_set_m, x = TRUE)
+
+# creamos lista de coeficientes para la estimación con bd con na imputados 
+
+coef_na_m <- edad_salario_m$coefficients
+coef_no_m<- edad_salario_m_no$coefficients
+
+# estimamos edad pico  con base de datos con na imputados 
+coef_na_m
+b1_i_m <-coef_na_m[2]
+b2_i_m <-coef_na_m[3]
+edad_pico_m <-(-b1_i_m/(2*b2_i_m))
+edad_pico_m # 51.7
+
+# estimamos edad pico  con base de datos con na eliminados 
+coef_no_m
+b1_i_m_n <-coef_no_m[2]
+b2_i_m_n<-coef_no_m[3]
+edad_pico_m_n <-(-b1_i_m_n/(2*b2_i_m_n))
+edad_pico_m_n # 49.5 
+
+df_gap_na$sex
+
+
 
   
