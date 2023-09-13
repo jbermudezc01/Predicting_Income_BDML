@@ -31,6 +31,33 @@ bd.interes <- base.datos.mayor.edad %>%
          inac, ingtot,hoursWorkUsual, maxEducLevel, oficio, orden, salud = p6090, seguridadsocial = p6100, sex, 
          microEmpresa, sizeFirm, y_salary_m, y_salary_m_hu, sub.alimentacion = p6585s1, sub.transporte=p6585s2,
          sub.familiar = p6585s3, sub.educativo = p6585s4)
+glimpse(bd.interes)
+# Urban solamente tiene 1 para todas las observaciones, por lo que es removida. 
+# depto solamente tiene 11 para todas las observaciones, por lo que es removida
+bd.interes <- bd.interes %>% 
+  select(-c('urban','depto'))
+#  Por otro lado, la variable salud tiene 3 labels: 1, 2 y 9. 9 indica: no sabe, no informa. Como son apenas 9 datos, 
+# o menos del 0.001% de los datos, vamos a imputarlos por la moda 
+moda <- function(x) {
+  return(as.numeric(names(which.max(table(x)))))
+}
+bd.interes$salud[bd.interes$salud == 9] <- moda(bd.interes$salud)
+# Revisando los labels, podemos ver que 2 indica que no estan afiliados a salud. Para interpretarlo como dummy se pueden
+# reemplazar estos datos por 0, de modo que la dummy seria 1 cuando esta afiliado a salud y 0 si no
+bd.interes$salud[bd.interes$salud == 2] <- 0
+
+# Para <seguridadsocial>, <sub.alimentacion>, <sub.transporte>, <sub.familiar> <sub.educativo> se elimina tambien 
+# la categoria 9 y se interpola por la moda
+bd.interes$seguridadsocial[bd.interes$seguridadsocial == 9]   <- moda(bd.interes$seguridadsocial)
+bd.interes$sub.alimentacion[bd.interes$sub.alimentacion == 9] <- moda(bd.interes$sub.alimentacion)
+bd.interes$sub.transporte[bd.interes$sub.transporte == 9]     <- moda(bd.interes$sub.transporte)
+bd.interes$sub.familiar[bd.interes$sub.familiar == 9]         <- moda(bd.interes$sub.familiar)
+bd.interes$sub.educativo[bd.interes$sub.educativo == 9]       <- moda(bd.interes$sub.educativo)
+# Reemplazar los valores 2 para las variables subsidios a 0
+bd.interes$sub.alimentacion[bd.interes$sub.alimentacion == 2] <- 0
+bd.interes$sub.transporte[bd.interes$sub.transporte == 2]     <- 0
+bd.interes$sub.familiar[bd.interes$sub.familiar == 2]         <- 0
+bd.interes$sub.educativo[bd.interes$sub.educativo == 2]       <- 0
 
 # Se tiene pensado utilizar y_total_m como variable de salario ya que tiene en cuenta a los hogares que trabajan como
 # independientes. Aparte, tiene menor numero de NA
@@ -45,34 +72,41 @@ bd.reducida <- bd.interes %>%
 # de las variables explicativas, consideramos que reemplazar por la media para todas las variables explicativas 
 # no es buena idea
 round(apply(bd.reducida,MARGIN = 2, function(x) sum(is.na(x)))/nrow(bd.reducida),2)
+# Sin embargo, la transformacion deja a <dsi> e <inac> solamente con 1 valor por lo que ya no son de interes
+bd.reducida <- bd.reducida %>% 
+  select(-c('dsi','inac'))
 
-
+# Cambiar variables a factor ----------------------------------------------
+variables.factor <- c('college','cotPension','cuentaPropia','estrato','formal','maxEducLevel','oficio',
+                      'salud','seguridadsocial','sex','microEmpresa','sizeFirm','sub.alimentacion','sub.transporte',
+                      'sub.familiar','sub.educativo')
+bd.reducida <- bd.reducida %>%
+  mutate_at(variables.factor, as.factor)
+  
 # Reemplazar por la media las variables con NA  o crear base sin NA -----------------------
 
 # Crear una base de datos sin <NA> en los salarios, porque tener 40% de NA nos parece imputar mucho
 bd.sin.na <- bd.reducida %>% 
   dplyr::filter(!is.na(y_salary_m))
 
+# Segunda opcion:
 # <seguridadsocial> es categorica por lo que cambiamos por la moda
-
-mode <- function(x) {
-  return(as.numeric(names(which.max(table(x)))))
-}
-
-bd.reducida <- bd.reducida %>%
+bd.media.imputada <- bd.reducida %>%
   mutate(
-    seguridadsocial  = ifelse(is.na(seguridadsocial), mode(seguridadsocial), seguridadsocial),
-    sub.alimentacion = ifelse(is.na(sub.alimentacion), mode(sub.alimentacion), sub.alimentacion),
-    sub.transporte   = ifelse(is.na(sub.transporte), mode(sub.transporte), sub.transporte),
-    sub.educativo    = ifelse(is.na(sub.educativo), mode(sub.educativo), sub.educativo),
-    sub.familiar     = ifelse(is.na(sub.familiar), mode(sub.familiar), sub.familiar),
-    maxEducLevel     = ifelse(is.na(maxEducLevel), mode(maxEducLevel), maxEducLevel)
+    seguridadsocial  = ifelse(is.na(seguridadsocial), moda(seguridadsocial), seguridadsocial),
+    sub.alimentacion = ifelse(is.na(sub.alimentacion), moda(sub.alimentacion), sub.alimentacion),
+    sub.transporte   = ifelse(is.na(sub.transporte), moda(sub.transporte), sub.transporte),
+    sub.educativo    = ifelse(is.na(sub.educativo), moda(sub.educativo), sub.educativo),
+    sub.familiar     = ifelse(is.na(sub.familiar), moda(sub.familiar), sub.familiar),
+    maxEducLevel     = ifelse(is.na(maxEducLevel), moda(maxEducLevel), maxEducLevel)
   )
 
-# Segunda opcion:
+
 # Como el resto de variables que quedan son salarios, se puede Reemplazar los NA por la media de cada columna
-bd.media.imputada <- bd.reducida %>%
-  mutate_all(~ ifelse(is.na(.), mean(., na.rm = TRUE), .))
+bd.media.imputada <- bd.media.imputada %>%
+  mutate_all(~ ifelse(is.na(.), mean(., na.rm = TRUE), .)) %>% 
+  mutate_at(variables.factor, as.factor)
+  
 
 ## transformar variables de interés a logaritmo natural para reducir la influencia de valores extremos =0 
 bd.sin.na <- bd.sin.na %>% 
@@ -84,7 +118,6 @@ bd.media.imputada <- bd.media.imputada %>%
          log_y_salary_m = log(y_salary_m))
 
 # Exportar a stores -------------------------------------------------------
-# CSV
-write.csv(bd.sin.na, file = paste0(getwd(),'/stores/base_datos_sin_na.csv'))
-write.csv(bd.media.imputada, file = paste0(getwd(),'/stores/base_datos_imputando_na.csv'))
+# RData
+save(bd.sin.na, bd.media.imputada, file=paste0(getwd(),'/bases.tratadas.RData'))
 
