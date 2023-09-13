@@ -22,7 +22,7 @@ load(paste0(getwd(),'/stores/base_datos_original.RData'))
 # Filtrar la base de datos para seleccionar individuos mayores de 18 anhos
 base.datos.mayor.edad <- base.datos.original %>% 
   dplyr::filter(age > 18)
-base.datos.mayor.edad <-  as.tibble(base.datos.mayor.edad)
+base.datos.mayor.edad <-  as_tibble(base.datos.mayor.edad)
 
 # Limpieza base de datos --------------------------------------------------
 # En primer lugar seleccionamos las variables que nos interesan de la base de datos
