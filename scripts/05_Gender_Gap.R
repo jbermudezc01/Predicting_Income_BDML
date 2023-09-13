@@ -18,8 +18,14 @@ p_load("tidyverse","rio","stargazer","rvest", "ggplot2","skimr", "boot")
 load(file=paste0(getwd(),'/stores/bases.tratadas.RData'))
 
 # Cambio nombre base datos para mejor manejo ------------------------------
+# Antes creamos la variable de edad al cuadrado
+bd.media.imputada <- bd.media.imputada %>% 
+  mutate(age2 = age^2)
+bd.sin.na <- bd.sin.na %>% 
+  mutate(age2 = age^2)
 df_gap_na <- bd.media.imputada
 df_gap_no <- bd.sin.na
+
 
 # Regresion brecha de genero no condicional -------------------------------
 # Imputando NA
@@ -110,8 +116,8 @@ sqrt(var(e_reg3.1))
 ##### estimar edad-salario pico por género 
 
 # crear variable age^2 en base de datos 
-base_datos_imputando_na$age2 <- (base_datos_imputando_na$age)^2
-base_datos_sin_na$age2 <- (base_datos_sin_na$age)^2
+bd.media.imputada$age2 <- (bd.media.imputada$age)^2
+bd.sin.na$age2 <- (bd.sin.na$age)^2
 
 # traer etimaciones edad-salario del punto 3 
 # estimados la edad pico para mujeres 
@@ -145,11 +151,11 @@ edad_pico_w # 49.5
 
 # estimamos edad pico para los hombres 
 
-sub_set_m <- subset(base_datos_imputando_na, sex == "0")
+sub_set_m <- subset(bd.media.imputada, sex == "0")
 edad_salario_m <- lm(log_y_salary_h ~age+age2, data = sub_set_m, x = TRUE)
 
 # Estimar con Na eliminados
-su_set_m <- subset(base_datos_sin_na, sex == "0")
+su_set_m <- subset(bd.sin.na, sex == "0")
 edad_salario_m_no <- lm(log_y_salary_h ~age+age2, data = su_set_m, x = TRUE)
 
 # creamos lista de coeficientes para la estimación con bd con na imputados 
