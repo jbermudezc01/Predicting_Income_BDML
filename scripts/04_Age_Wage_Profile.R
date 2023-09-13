@@ -1,4 +1,12 @@
+##########################################################
+# Perfil salario edad
+# Autores: Juan Pablo Bermudez. Lina Bautista. Esteban Meza. Pharad Sebastian Escobar
+##########################################################
 
+
+# Limpieza area de trabajo ------------------------------------------------
+rm(list=ls())
+cat('\014')
 
 # Cargar librerias --------------------------------------------------------
 library(tidyverse) # Librerias del tidyverse, principalmente dplyr para manejo de datos
@@ -6,32 +14,33 @@ library(rvest)     #Para web scrapping
 library(ggplot2)
 library(skimr)
 library(stargazer)
+
 # Cargar la base de datos -------------------------------------------------
 # Las bases de datos que obtuvimos al filtrar
-base_datos_sin_na <- read_csv("stores/base_datos_sin_na.csv")
-base_datos_imputando_na <- read_csv("stores/base_datos_imputando_na.csv")
-
+# bd.sin.na <- read_csv("stores/bd.sin.na.csv")
+# bd.media.imputada <- read_csv("stores/bd.media.imputada.csv")
+load(file=paste0(getwd(),'/stores/bases.tratadas.RData'))
 
 #--------------Estimación de la regresión log(w)=b1+b2age+b3age^2
 #creamos una variable de edad al cuadrado
-base_datos_imputando_na$age2<- (base_datos_imputando_na$age)^2
-base_datos_sin_na$age2<- (base_datos_sin_na$age)^2
+bd.media.imputada$age2<- (bd.media.imputada$age)^2
+bd.sin.na$age2<- (bd.sin.na$age)^2
 
 #Para cada base de datos estimaremos dos regresiones con el fin de contrastar que la construcción
 #de nuestra variable objetivo haya sido la adecuada
 
 #Estimación de los modelos para la base de datos en que imputamos la media  a los NA
 ###1. Estimando con log_y_salary_h
-modelo1_imputando <- lm(log_y_salary_h ~age+age2, data = base_datos_imputando_na, x = TRUE)
+modelo1_imputando <- lm(log_y_salary_h ~age+age2, data = bd.media.imputada, x = TRUE)
 ##2. Estimando con log(y_salary_m_hu)
-modelo2_imputando<-lm(log(y_salary_m_hu)~age+age2, data = base_datos_imputando_na, x = TRUE)
+modelo2_imputando<-lm(log(y_salary_m_hu)~age+age2, data = bd.media.imputada, x = TRUE)
 
 
 #Estimación de los modelos para la base de datos en que eliminamos los NA.
 ###1. Estimando con log_y_salary_h
-modelo1_sin_na <- lm(log_y_salary_h ~age+age2, data = base_datos_sin_na, x = TRUE)
+modelo1_sin_na <- lm(log_y_salary_h ~age+age2, data = bd.sin.na, x = TRUE)
 ##2. Estimando con log(y_salary_m_hu)
-modelo2_sin_na<-lm(log(y_salary_m_hu)~age+age2, data = base_datos_sin_na, x = TRUE)
+modelo2_sin_na<-lm(log(y_salary_m_hu)~age+age2, data = bd.sin.na, x = TRUE)
 
 
 #Tablas de resultados de las regresiones
@@ -48,19 +57,19 @@ summary_sin_na<-summary(modelo1_sin_na)$coefficients
 
 
 #Gráfico Automático
-ggplot(base_datos_imputando_na, aes(y = log_y_salary_h, x = age)) +
+ggplot(bd.media.imputada, aes(y = log_y_salary_h, x = age)) +
   geom_point() + # add points
   stat_smooth(formula = 'y ~ x+x^2', method = lm, se = FALSE, 
-              size = 1) +  #fit the linear model in the plot
+              linewidth = 1) +  #fit the linear model in the plot
   theme_bw() + #black and white theme
   labs(x = "Age",  
        y = "Log(wage_h)",
        title = "Valores predichos del salario imputando la media en NA") # labels
 
-ggplot(base_datos_sin_na, aes(y = log_y_salary_h, x = age)) +
+ggplot(bd.sin.na, aes(y = log_y_salary_h, x = age)) +
   geom_point() + # add points
   stat_smooth(formula = 'y ~ x+x^2', method = lm, se = FALSE, 
-              size = 1) +  #fit the linear model in the plot
+              linewidth = 1) +  #fit the linear model in the plot
   theme_bw() + #black and white theme
   labs(x = "Age",  
        y = "Log(wage_h)",
@@ -87,7 +96,7 @@ lower_i<-rep(0,B)
 upper_i<-rep(0,B)
 
 for(i in 1:B){
-  db_sample<- sample_frac(base_datos_imputando_na,size=1,replace=TRUE) #takes a sample with replacement of the same size of the original sample (1 or 100%)
+  db_sample<- sample_frac(bd.media.imputada,size=1,replace=TRUE) #takes a sample with replacement of the same size of the original sample (1 or 100%)
   f<-lm(log_y_salary_h~age+age2,db_sample)# estimates the models
   coefs<-f$coefficients # gets the coefficient of interest that coincides with the elasticity of demand
   b1<-coefs[2]
@@ -121,7 +130,7 @@ lower_s<-rep(0,B)
 upper_s<-rep(0,B)
 
 for(i in 1:B){
-  db_sample<- sample_frac(base_datos_sin_na,size=1,replace=TRUE) #takes a sample with replacement of the same size of the original sample (1 or 100%)
+  db_sample<- sample_frac(bd.sin.na,size=1,replace=TRUE) #takes a sample with replacement of the same size of the original sample (1 or 100%)
   f<-lm(log_y_salary_h~age+age2,db_sample)# estimates the models
   coefs<-f$coefficients # gets the coefficient of interest that coincides with the elasticity of demand
   b1<-coefs[2]
@@ -149,15 +158,15 @@ p_load("boot")
 funcion_pa<-function(data,index){
   b1<-coef(lm(log_y_salary_h~age+age2, data = data, subset = index))[2]
   b2<-coef(lm(log_y_salary_h~age+age2, data = data, subset = index))[3]
-  (-b1/(2*b2)) 
+  return((-b1/(2*b2))) 
 }
 
-funcion_pa(base_datos_imputando_na, 1:nrow(base_datos_imputando_na))
+funcion_pa(bd.media.imputada, 1:nrow(bd.media.imputada))
 #si es la misma que teníamos al principio
 
 #Hacemos el boot de forma automática con nuestra función
-boot_i<-boot(base_datos_imputando_na, funcion_pa, R=2000)
-boot_s<-boot(base_datos_sin_na, funcion_pa, R=2000)
+boot_i<-boot(bd.media.imputada, funcion_pa, R=2000)
+boot_s<-boot(bd.sin.na, funcion_pa, R=2000)
 
 #Creación del dataframe para generar los intervalos de confianza:
 mat = matrix(ncol = 0, nrow = 2000)
