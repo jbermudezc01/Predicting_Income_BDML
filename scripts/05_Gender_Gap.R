@@ -1,51 +1,42 @@
+##########################################################
+# Brechas salariales de genero
+# Autores: Juan Pablo Bermudez. Lina Bautista. Esteban Meza. Pharad Sebastian Escobar
+##########################################################
 
-#### brechas salariales de género ######
 
-# cargamos las librerias 
+# Limpieza area de trabajo ------------------------------------------------
+rm(list=ls())
+cat('\014')
+
+# Librerias ---------------------------------------------------------------
 require(pacman)
 p_load("tidyverse","rio","stargazer","rvest", "ggplot2","skimr", "boot")
 
-# importamos la base de datos 
-base_datos_sin_na <- read_csv("stores/base_datos_sin_na.csv")
-base_datos_imputando_na <- read_csv("stores/base_datos_imputando_na.csv")
+# Base de datos -----------------------------------------------------------
+# bd.sin.na <- read_csv("stores/bd.sin.na.csv")
+# bd.media.imputada <- read_csv("stores/bd.media.imputada.csv")
+load(file=paste0(getwd(),'/stores/bases.tratadas.RData'))
 
-# transformación de varibles ditomicas y dicotomicas 
-# transformar variables dicotomicas para tomen valores 0 y 1 
-# base de datos con na imputados
-var_dico<- c("cotPension","salud","sub.alimentacion",
-                 "sub.educativo","sub.familiar","sub.transporte")
-base_datos_imputando_na[,var_dico] = base_datos_imputando_na[,var_dico] -1
-base_datos_sin_na[,var_dico] = base_datos_sin_na[,var_dico] -1
-#definimos las variables categoricas 
-variables_categoricas <- c("college","cotPension","cuentaPropia",
-                           "formal", "inac","salud","sex","microEmpresa","sizeFirm",
-                           "seguridadsocial","sub.alimentacion",
-                           "sub.educativo","sub.familiar","sub.transporte")
-base_datos_imputando_na<- base_datos_imputando_na %>% mutate_at(variables_categoricas, as.factor)
-base_datos_sin_na<- base_datos_sin_na %>% mutate_at(variables_categoricas, as.factor)
+# Cambio nombre base datos para mejor manejo ------------------------------
+df_gap_na <- bd.media.imputada
+df_gap_no <- bd.sin.na
 
-# cambios nombres de base de datos para mejor manejo
-df_gap_na <- base_datos_imputando_na
-df_gap_no <- base_datos_sin_na
-
-# estimación de la regresión de brecha salarial no condicional
-
-# imputando Na 
+# Regresion brecha de genero no condicional -------------------------------
+# Imputando NA
 reg1.1 <- lm(log_y_salary_h ~sex, data = df_gap_na, x = TRUE)
 stargazer(reg1.1, type = "text", digits = 2)  
-# eliminando na
+# Eliminando NA
 reg1.2 <- lm(log_y_salary_h ~sex, data = df_gap_no, x = TRUE)
 stargazer(reg1.2, type = "text", digits = 2) 
 
-## estimación de la regresión de brecha salarial condicional 
-# imputando Na
-
+# Estimacion brecha salarial condicional ----------------------------------
+# Imputando NA
 reg2.1 <- lm(log_y_salary_h ~sex+age+maxEducLevel+
              cuentaPropia+estrato+
              hoursWorkUsual+microEmpresa,
            data = df_gap_na, x= T)
 stargazer(reg2.1, type = "text", digits = 2)
-# eliminando Na
+# Eliminando Na
 reg2.2 <- lm(log_y_salary_h ~sex+age+maxEducLevel+estrato+
                hoursWorkUsual+microEmpresa,
              data = df_gap_no, x= T)

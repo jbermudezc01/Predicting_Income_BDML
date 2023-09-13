@@ -19,7 +19,7 @@ library(stargazer)
 # Las bases de datos que obtuvimos al filtrar
 # bd.sin.na <- read_csv("stores/bd.sin.na.csv")
 # bd.media.imputada <- read_csv("stores/bd.media.imputada.csv")
-load(paste0(getwd(),'/bases.tratadas.RData'))
+load(file=paste0(getwd(),'/stores/bases.tratadas.RData'))
 
 #--------------Estimación de la regresión log(w)=b1+b2age+b3age^2
 #creamos una variable de edad al cuadrado
