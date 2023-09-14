@@ -81,7 +81,7 @@ variables.factor <- c('college','cotPension','cuentaPropia','estrato','formal','
                       'salud','seguridadsocial','sex','microEmpresa','sizeFirm','sub.alimentacion','sub.transporte',
                       'sub.familiar','sub.educativo')
 bd.reducida <- bd.reducida %>%
-  mutate_at(variables.factor, as.factor)
+  mutate_at(variables.factor, as.numeric)
   
 # Reemplazar por la media las variables con NA  o crear base sin NA -----------------------
 
