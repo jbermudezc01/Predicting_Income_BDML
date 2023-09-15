@@ -19,17 +19,17 @@ load(file=paste0(getwd(),'/stores/bases.tratadas.RData'))
 
 # Cambio nombre base datos para mejor manejo ------------------------------
 # Antes creamos la variable de edad al cuadrado
-<<<<<<< HEAD
+
 bd.media.imputada <-bd.media.imputada %>% 
-=======
+
 bd.media.imputada <- bd.media.imputada %>% 
->>>>>>> beacb558a15d336959291dd88ec8a07817481fa7
+
   mutate(age2 = age^2)
 bd.sin.na <- bd.sin.na %>% 
   mutate(age2 = age^2)
 df_gap_na <- bd.media.imputada
 df_gap_no <- bd.sin.na
-<<<<<<< HEAD
+
 # ajustar variable maxEduc
 # Calcula la media de la variable
 media <- mean(df_gap_no$maxEducLevel, na.rm = TRUE)
@@ -38,11 +38,8 @@ df_gap_no$maxEducLevel[is.na(df_gap_no$maxEducLevel)] <- media
 
 # Regresion brecha de genero no condicional -------------------------------
 
-=======
-
-
 # Regresion brecha de genero no condicional -------------------------------
->>>>>>> beacb558a15d336959291dd88ec8a07817481fa7
+
 # Imputando NA
 reg1.1 <- lm(log_y_salary_h ~sex, data = df_gap_na, x = TRUE)
 stargazer(reg1.1, type = "text", digits = 2)  
@@ -61,17 +58,13 @@ stargazer(reg2.1, type = "text", digits = 2)
 reg2.2 <- lm(log_y_salary_h ~sex+age+maxEducLevel+estrato+
                hoursWorkUsual+microEmpresa,
              data = df_gap_no, x= T)
-<<<<<<< HEAD
 stargazer(reg2.2, type = "text", digits = 2)
 
 #estimar la brecha salarial condicional por el teorema FWL-------------------
 
 # base de datos imputando NA --------------
-=======
-
 
 ### estimar la brecha salarial condicional por el teorema FWL ########
->>>>>>> beacb558a15d336959291dd88ec8a07817481fa7
 
 # convertir las variables de explicativas a variables numericas 
 df_gap_na <- df_gap_na %>% mutate(sex=as.numeric(sex),
@@ -135,7 +128,6 @@ mean(e_reg3.1)
 # error estandar
 sqrt(var(e_reg3.1))
 
-<<<<<<< HEAD
 # base de datos sin NA --------------
 
 # convertir las variables de explicativas a variables numericas 
@@ -205,17 +197,12 @@ sqrt(var(e_reg3.2))
 # traer etimaciones edad-salario del punto (3) 
 
 # estimados la edad pico para mujeres ---------------------
-=======
+
 
 ##### estimar edad-salario pico por género 
 
-# crear variable age^2 en base de datos 
-bd.media.imputada$age2 <- (bd.media.imputada$age)^2
-bd.sin.na$age2 <- (bd.sin.na$age)^2
-
 # traer etimaciones edad-salario del punto 3 
 # estimados la edad pico para mujeres 
->>>>>>> beacb558a15d336959291dd88ec8a07817481fa7
 
 # base datos con na imputados 
 sub_set_sex <- subset(df_gap_na, sex == "1")
@@ -242,7 +229,6 @@ coef_no
 b1_i <-coef_no[2]
 b2_i <-coef_no[3]
 edad_pico_w <-(-b1_i/(2*b2_i))
-<<<<<<< HEAD
 edad_pico_w # 42.9
 
 # estimamos edad pico para los hombres ------------------------
@@ -250,10 +236,6 @@ edad_pico_w # 42.9
 sub_set_m <- subset(df_gap_na, sex == "2")
 edad_salario_m <- lm(log_y_salary_h ~age+age2, data = sub_set_m, x = TRUE)
 
-# Estimar con Na eliminados
-su_set_m <- subset(df_gap_no, sex == "2")
-=======
-edad_pico_w # 49.5 
 
 # estimamos edad pico para los hombres 
 
@@ -262,7 +244,6 @@ edad_salario_m <- lm(log_y_salary_h ~age+age2, data = sub_set_m, x = TRUE)
 
 # Estimar con Na eliminados
 su_set_m <- subset(bd.sin.na, sex == "0")
->>>>>>> beacb558a15d336959291dd88ec8a07817481fa7
 edad_salario_m_no <- lm(log_y_salary_h ~age+age2, data = su_set_m, x = TRUE)
 
 # creamos lista de coeficientes para la estimación con bd con na imputados 
@@ -275,11 +256,11 @@ coef_na_m
 b1_i_m <-coef_na_m[2]
 b2_i_m <-coef_na_m[3]
 edad_pico_m <-(-b1_i_m/(2*b2_i_m))
-<<<<<<< HEAD
+
 edad_pico_m # 57.47
-=======
+
 edad_pico_m # 51.7
->>>>>>> beacb558a15d336959291dd88ec8a07817481fa7
+
 
 # estimamos edad pico  con base de datos con na eliminados 
 coef_no_m
@@ -288,7 +269,7 @@ b2_i_m_n<-coef_no_m[3]
 edad_pico_m_n <-(-b1_i_m_n/(2*b2_i_m_n))
 edad_pico_m_n # 49.5 
 
-<<<<<<< HEAD
+
 ### Estimar los intervalos 
 
 ### intervalos para edad pico mujeres 
@@ -337,10 +318,19 @@ boot_y<-boot(su_set_m, funcion_pa_sex, R=2000) # base de datos sin na
 matrix.2 = matrix(ncol = 0, nrow = 2000)
 i_c_m<-data.frame(matrix.2)
 
+#Intervalos para datos con media inputada a los NA
+se_x<-as.numeric(sqrt(var(boot_x[["t"]])))
+i_c_m$bootstrap_x<-boot_i[["t"]]
+i_c_m$l_i_x<-boot_x[["t"]]-qnorm(0.05/2)*se_x
+i_c_m$l_s_x<-boot_x[["t"]]+qnorm(0.05/2)*se_x
 
-=======
-df_gap_na$sex
->>>>>>> beacb558a15d336959291dd88ec8a07817481fa7
+#Intervalos para datos a los que se les quitaron los NA
+se_y<-as.numeric(sqrt(var(boot_y[["t"]])))
+i_c_m$bootstrap_y<-boot_y[["t"]]
+i_c_m$L_i_y<-boot_y[["t"]]-qnorm(0.05/2)*se_y
+i_c_m$l_s_y<-boot_y[["t"]]+qnorm(0.05/2)*se_y
+
+
 
 
 
