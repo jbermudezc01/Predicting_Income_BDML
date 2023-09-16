@@ -30,8 +30,9 @@ factonum <- function(x){
   return(as.numeric(as.character(x)))
 }
 bd.interes <- bd.interes %>% 
-  mutate(age2 = age^2, age3 = age^3, age4 = age^4,sexeduc = factonum(sex)*factonum(college), 
-         sexsalud = factonum(sex)*factonum(salud),sexempresa = factonum(sex)*factonum(microEmpresa)) %>% 
+  mutate(age2 = age^2, age3 = age^3, age4 = age^4, 
+         sexeduc = factonum(sex)*factonum(college), sexsalud = factonum(sex)*factonum(salud),
+         sexempresa = factonum(sex)*factonum(microEmpresa), sexformal = factonum(sex)*factonum(formal)) %>% 
   mutate_at(c('sexeduc','sexsalud','sexempresa'),as.factor)
 
 # Creacion de recipes -----------------------------------------------------
@@ -73,18 +74,19 @@ rec.3      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +
   step_dummy(all_nominal_predictors())
 
 rec.4      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  college + salud +
-                       estrato + hoursWorkUsual + microEmpresa + oficio + sexeduc + sexsalud + sexempresa, data= bd.interes) %>% 
+                       estrato + hoursWorkUsual + microEmpresa + oficio + sexeduc + sexsalud + sexempresa +
+                       sexformal, data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
-rec.5      <- recipe(log_y_salary_h ~ age + age2 + sex + age3 + age4 + maxEducLevel +  
+rec.5      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel + salud + oficio + seguridadsocial +
                        estrato + hoursWorkUsual + microEmpresa + sub.transporte + sub.familiar + sub.educativo + 
                        sub.alimentacion, data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
-rec.6      <- recipe(log_y_salary_h ~ age + age2 + sex + age3 + age4 + maxEducLevel +  
+rec.6      <- recipe(log_y_salary_h ~ age + age2 + age3 + age4 + sex + maxEducLevel +  
                        estrato + hoursWorkUsual + microEmpresa + sub.transporte + sub.familiar + sub.educativo + sub.alimentacion +
-                       salud + seguridadsocial + college + oficio + sexeduc + sexsalud + sexempresa+
-                       sizeFirm  + ingtot + formal, data= bd.interes) %>% 
+                       salud + seguridadsocial + college + oficio + sexeduc + sexsalud + sexempresa + sexformal +
+                       sizeFirm  + formal, data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
 # El modelo de estimacion es lineal
