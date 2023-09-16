@@ -53,7 +53,7 @@ bd.interes$sub.alimentacion[bd.interes$sub.alimentacion == 9] <- moda(bd.interes
 bd.interes$sub.transporte[bd.interes$sub.transporte == 9]     <- moda(bd.interes$sub.transporte)
 bd.interes$sub.familiar[bd.interes$sub.familiar == 9]         <- moda(bd.interes$sub.familiar)
 bd.interes$sub.educativo[bd.interes$sub.educativo == 9]       <- moda(bd.interes$sub.educativo)
-# Reemplazar los valores 2 para las variables subsidios a 0
+# Reemplazar los valores 2 para las variables subsidios a 0, de este modo 0 significa que no tuvo subsidio y 1 que si tuvo
 bd.interes$sub.alimentacion[bd.interes$sub.alimentacion == 2] <- 0
 bd.interes$sub.transporte[bd.interes$sub.transporte == 2]     <- 0
 bd.interes$sub.familiar[bd.interes$sub.familiar == 2]         <- 0
@@ -76,18 +76,18 @@ round(apply(bd.reducida,MARGIN = 2, function(x) sum(is.na(x)))/nrow(bd.reducida)
 bd.reducida <- bd.reducida %>% 
   select(-c('dsi','inac'))
 
-# Cambiar variables a factor ----------------------------------------------
-variables.factor <- c('college','cotPension','cuentaPropia','estrato','formal','maxEducLevel','oficio',
-                      'salud','seguridadsocial','sex','microEmpresa','sizeFirm','sub.alimentacion','sub.transporte',
-                      'sub.familiar','sub.educativo')
-bd.reducida <- bd.reducida %>%
-  mutate_at(variables.factor, as.numeric)
-  
 # Reemplazar por la media las variables con NA  o crear base sin NA -----------------------
 
 # Crear una base de datos sin <NA> en los salarios, porque tener 40% de NA nos parece imputar mucho
 bd.sin.na <- bd.reducida %>% 
   dplyr::filter(!is.na(y_salary_m))
+
+# Incluso asi hay dos variables que tenemos que imputar por la moda, <seguridadsocial> y <maxEducLevel>
+bd.sin.na <- bd.sin.na %>% 
+  mutate(
+    seguridadsocial = ifelse(is.na(seguridadsocial), moda(seguridadsocial), seguridadsocial),
+    maxEducLevel     = ifelse(is.na(maxEducLevel), moda(maxEducLevel), maxEducLevel)
+  )
 
 # Segunda opcion:
 # <seguridadsocial> es categorica por lo que cambiamos por la moda
@@ -101,12 +101,10 @@ bd.media.imputada <- bd.reducida %>%
     maxEducLevel     = ifelse(is.na(maxEducLevel), moda(maxEducLevel), maxEducLevel)
   )
 
-
 # Como el resto de variables que quedan son salarios, se puede Reemplazar los NA por la media de cada columna
 bd.media.imputada <- bd.media.imputada %>%
   mutate(y_salary_m_hu = ifelse(is.na(y_salary_m_hu), mean(y_salary_m_hu, na.rm = TRUE), y_salary_m_hu),
-         y_salary_m = ifelse(is.na(y_salary_m), mean(y_salary_m, na.rm = TRUE), y_salary_m)) %>% 
-  mutate_at(variables.factor, as.factor)
+         y_salary_m = ifelse(is.na(y_salary_m), mean(y_salary_m, na.rm = TRUE), y_salary_m))
   
 
 ## transformar variables de interés a logaritmo natural para reducir la influencia de valores extremos =0 
@@ -117,6 +115,15 @@ bd.sin.na <- bd.sin.na %>%
 bd.media.imputada <- bd.media.imputada %>% 
   mutate(log_y_salary_h = log(y_salary_m_hu),
          log_y_salary_m = log(y_salary_m))
+
+# Cambiar variables a factor ----------------------------------------------
+variables.factor <- c('college','cotPension','cuentaPropia','estrato','formal','maxEducLevel','oficio',
+                      'salud','seguridadsocial','sex','microEmpresa','sizeFirm','sub.alimentacion','sub.transporte',
+                      'sub.familiar','sub.educativo')
+bd.sin.na <- bd.sin.na %>%
+  mutate_at(variables.factor, as.factor)
+bd.media.imputada <- bd.media.imputada %>%
+  mutate_at(variables.factor, as.factor)
 
 # Exportar a stores -------------------------------------------------------
 # RData
