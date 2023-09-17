@@ -30,7 +30,7 @@ bd.interes <- base.datos.mayor.edad %>%
   select(age, urban=clase, college, cotPension, cuentaPropia, depto, directorio, dsi,estrato=estrato1, formal, 
          inac, ingtot,hoursWorkUsual, maxEducLevel, oficio, orden, salud = p6090, seguridadsocial = p6100, sex, 
          microEmpresa, sizeFirm, y_salary_m, y_salary_m_hu, sub.alimentacion = p6585s1, sub.transporte=p6585s2,
-         sub.familiar = p6585s3, sub.educativo = p6585s4)
+         sub.familiar = p6585s3, sub.educativo = p6585s4, relab)
 glimpse(bd.interes)
 # Urban solamente tiene 1 para todas las observaciones, por lo que es removida. 
 # depto solamente tiene 11 para todas las observaciones, por lo que es removida
@@ -53,6 +53,10 @@ bd.interes$sub.alimentacion[bd.interes$sub.alimentacion == 9] <- moda(bd.interes
 bd.interes$sub.transporte[bd.interes$sub.transporte == 9]     <- moda(bd.interes$sub.transporte)
 bd.interes$sub.familiar[bd.interes$sub.familiar == 9]         <- moda(bd.interes$sub.familiar)
 bd.interes$sub.educativo[bd.interes$sub.educativo == 9]       <- moda(bd.interes$sub.educativo)
+# Por ultimo, observamos que en la variable <relab> la categoria 8 indica jornalero. Debido a que solamente cuenta con 1 dato, 
+# se le va a imputar la moda, para evitar posibles errores al momento de estimar
+bd.interes$relab[bd.interes$relab == 8] <- moda(bd.interes$relab)
+
 # Reemplazar los valores 2 para las variables subsidios a 0, de este modo 0 significa que no tuvo subsidio y 1 que si tuvo
 bd.interes$sub.alimentacion[bd.interes$sub.alimentacion == 2] <- 0
 bd.interes$sub.transporte[bd.interes$sub.transporte == 2]     <- 0
