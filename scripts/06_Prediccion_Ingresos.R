@@ -30,7 +30,8 @@ factonum <- function(x){
   return(as.numeric(as.character(x)))
 }
 bd.interes <- bd.interes %>% 
-  mutate(age2 = age^2, age3 = age^3, age4 = age^4, 
+  mutate(age2 = age^2, age3 = age^3, age4 = age^4, age5 = age^5, age6 = age^6, age7 = age^7, age8 = age^8, 
+         age9 = age^9, age10 = age^10,
          sexeduc = factonum(sex)*factonum(college), sexsalud = factonum(sex)*factonum(salud),
          sexempresa = factonum(sex)*factonum(microEmpresa), sexformal = factonum(sex)*factonum(formal)) %>% 
   mutate_at(c('sexeduc','sexsalud','sexempresa'),as.factor)
@@ -69,24 +70,38 @@ rec.2      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +
   step_dummy(all_nominal_predictors())
 
 rec.3      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
-                       estrato + hoursWorkUsual + microEmpresa + sub.transporte + sub.familiar +
-                       sub.educativo + sub.alimentacion, data= bd.interes) %>% 
+                       estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                       sub.educativo + sub.alimentacion , data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
-rec.4      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  college + salud +
-                       estrato + hoursWorkUsual + microEmpresa + oficio + sexeduc + sexsalud + sexempresa +
-                       sexformal + relab, data= bd.interes) %>% 
+rec.4      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                       estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                       sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal, 
+                       data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
-rec.5      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel + salud + oficio + seguridadsocial +
-                       estrato + hoursWorkUsual + microEmpresa + sub.transporte + sub.familiar + sub.educativo + 
-                       sub.alimentacion + relab, data= bd.interes) %>% 
+rec.5      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                       estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                       sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal + relab,
+                     data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
-rec.6      <- recipe(log_y_salary_h ~ age + age2 + age3 + age4 + sex + maxEducLevel +  
-                       estrato + hoursWorkUsual + microEmpresa + sub.transporte + sub.familiar + sub.educativo + sub.alimentacion +
-                       salud + seguridadsocial + college + oficio + sexeduc + sexsalud + sexempresa + sexformal +
-                       sizeFirm  + formal + relab, data= bd.interes) %>% 
+rec.6      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                       estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                       sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal + relab + 
+                       sizeFirm + formal, data= bd.interes) %>% 
+  step_dummy(all_nominal_predictors())
+
+rec.7      <- recipe(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + sex + maxEducLevel +  
+                       estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                       sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal + relab + 
+                       sizeFirm + formal, data= bd.interes) %>% 
+  step_dummy(all_nominal_predictors())
+
+rec.8      <- recipe(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + age6 + age7 + age8 + age9 + age10 + sex + maxEducLevel +
+                       estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                       sub.educativo + sub.alimentacion  + sexeduc + sexsalud + sexempresa + sexformal + relab +
+                       sizeFirm + formal, data= bd.interes) %>%
   step_dummy(all_nominal_predictors())
 
 # El modelo de estimacion es lineal
@@ -130,6 +145,13 @@ wf.6 <- workflow() %>%
   add_recipe(rec.6) %>% 
   add_model(lm.mod)
 
+wf.7 <- workflow() %>% 
+  add_recipe(rec.7) %>% 
+  add_model(lm.mod)
+
+wf.8 <- workflow() %>% 
+  add_recipe(rec.8) %>% 
+  add_model(lm.mod)
 # Simple Cross-Validation -------------------------------------------------
 # Semilla para reproducibilidad
 set.seed(10101)
@@ -203,28 +225,46 @@ test.6<- predict(fit.6, new_data = test) %>%
 test_rmse.6 <- rmse(test.6, truth = log_y_salary_h, estimate = .pred)
 rmse.6 <- test_rmse.6$.estimate
 
+fit.7 <- wf.7 %>%
+  fit(data = train)
+test.7 <- predict(fit.7, new_data = test) %>% 
+  bind_cols(test)
+test_rmse.7 <- rmse(test.7, truth = log_y_salary_h, estimate = .pred)
+rmse.7 <- test_rmse.7$.estimate
+
+fit.8 <- wf.8 %>%
+  fit(data = train)
+test.8 <- predict(fit.8, new_data = test) %>% 
+  bind_cols(test)
+test_rmse.8 <- rmse(test.8, truth = log_y_salary_h, estimate = .pred)
+rmse.8 <- test_rmse.8$.estimate
+
 # Dataframe con RMSE 
-df.rmse <- data.frame('Workflow' = c('wf.age','wf.sex','wf.agesex',paste0('wf.',1:6)),
-                      'RMSE' = c(rmse.age, rmse.sex, rmse.sexage,unlist(mget(paste0('rmse.',1:6))) ))
-# Las dos recetas que minimizan el RMSE son :
-workflows.min <- df.rmse$Workflow[order(df.rmse$RMSE)[1:2]]
+df.rmse <- data.frame('Workflow' = c('wf.sex','wf.age','wf.agesex',paste0('wf.',1:8)),
+                      'RMSE' = c(rmse.sex, rmse.age, rmse.sexage,unlist(mget(paste0('rmse.',1:8))) ))
+df.rmse <- df.rmse %>% mutate(MSE = RMSE^2)
 
-# LOOCV -------------------------------------------------------------------
-# Para las dos recetas que minimizaron el simple CV vamos a realizar LOOCV
-# Primero para el que minimizo el RMSE en el CV
-loocv.preds.min <- vector("numeric", length = nrow(bd.interes))
-for(i in seq_len(nrow(bd.interes))) loocv.preds.min[i] <- predict(((get(workflows.min[1])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
-loocv.rmse.min <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.min), truth = ...1, estimate = ...2)
-loocv.rmse.min$.estimate
-
-# Ahora con el segundo minimo
-loocv.preds.2 <- vector("numeric", length = nrow(bd.interes))
-for(i in seq_len(nrow(bd.interes))) loocv.preds.2[i] <- predict(((get(workflows.min[2])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
-loocv.rmse.2 <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.2), truth = ...1, estimate = ...2)
-loocv.rmse.2$.estimate
-
-ggplot(df.rmse, aes(x=(1:9),y=RMSE)) +
-  geom_smooth(method = "auto", se = FALSE, color = 'red', linetype = 'solid') +
-  theme_classic()+
-  scale_x_continuous(breaks= 1:9)+
-  labs(x='Complexity', title = 'RMSE vs the complexity of a model')
+if(0){
+  # Las dos recetas que minimizan el RMSE son :
+  workflows.min <- df.rmse$Workflow[order(df.rmse$RMSE)[1:2]]
+  
+  # LOOCV -------------------------------------------------------------------
+  # Para las dos recetas que minimizaron el simple CV vamos a realizar LOOCV
+  # Primero para el que minimizo el RMSE en el CV
+  loocv.preds.min <- vector("numeric", length = nrow(bd.interes))
+  for(i in seq_len(nrow(bd.interes))) loocv.preds.min[i] <- predict(((get(workflows.min[1])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
+  loocv.rmse.min <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.min), truth = ...1, estimate = ...2)
+  loocv.rmse.min$.estimate
+  
+  # Ahora con el segundo minimo
+  loocv.preds.2 <- vector("numeric", length = nrow(bd.interes))
+  for(i in seq_len(nrow(bd.interes))) loocv.preds.2[i] <- predict(((get(workflows.min[2])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
+  loocv.rmse.2 <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.2), truth = ...1, estimate = ...2)
+  loocv.rmse.2$.estimate
+  
+  ggplot(df.rmse, aes(x=(1:11),y=RMSE)) +
+    geom_line(method = "auto", se = FALSE, color = 'red', linetype = 'solid') +
+    theme_classic()+
+    scale_x_continuous(breaks= 1:11)+
+    labs(x='Complexity', title = 'RMSE vs the complexity of a model')
+}
