@@ -268,3 +268,16 @@ if(0){
     scale_x_continuous(breaks= 1:11)+
     labs(x='Complexity', title = 'RMSE vs the complexity of a model')
 }
+
+
+
+modelo8 <- lm(log_y_salary_h ~ poly(age,10, raw=T) + sex + maxEducLevel +
+                estrato + poly(hoursWorkUsual,10,raw=T) + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                sub.educativo + sub.alimentacion  + sexeduc + sexsalud + sexempresa + sexformal + relab +
+                sizeFirm + formal, data= train)
+
+test$predict <- predict(modelo8, newdata = test)
+rmse(test, truth = 'log_y_salary_h',estimate = predict)
+
+train$predict <- predict(modelo8, newdata = train)
+rmse(train, truth = 'log_y_salary_h',estimate = predict)
