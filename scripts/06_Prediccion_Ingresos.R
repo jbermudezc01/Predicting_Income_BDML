@@ -252,21 +252,21 @@ df.rmse <- df.rmse %>% mutate(MSE = RMSE^2)
 
 # Las dos recetas que minimizan el RMSE son :
 workflows.min <- df.rmse$Workflow[order(df.rmse$RMSE)[1:2]]
-if(0){
-  # LOOCV -------------------------------------------------------------------
-  # Para las dos recetas que minimizaron el simple CV vamos a realizar LOOCV
-  # Primero para el que minimizo el RMSE en el CV
-  loocv.preds.min <- vector("numeric", length = nrow(bd.interes))
-  for(i in seq_len(nrow(bd.interes))) loocv.preds.min[i] <- predict(((get(workflows.min[1])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
-  loocv.rmse.min <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.min), truth = ...1, estimate = ...2)
-  loocv.rmse.min$.estimate
-  
-  # Ahora con el segundo minimo
-  loocv.preds.2 <- vector("numeric", length = nrow(bd.interes))
-  for(i in seq_len(nrow(bd.interes))) loocv.preds.2[i] <- predict(((get(workflows.min[2])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
-  loocv.rmse.2 <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.2), truth = ...1, estimate = ...2)
-  loocv.rmse.2$.estimate
-}
+
+# LOOCV -------------------------------------------------------------------
+# Para las dos recetas que minimizaron el simple CV vamos a realizar LOOCV
+# Primero para el que minimizo el RMSE en el CV
+loocv.preds.min <- vector("numeric", length = nrow(bd.interes))
+for(i in seq_len(nrow(bd.interes))) loocv.preds.min[i] <- predict(((get(workflows.min[1])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
+loocv.rmse.min <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.min), truth = ...1, estimate = ...2)
+loocv.rmse.min$.estimate
+
+# Ahora con el segundo minimo
+loocv.preds.2 <- vector("numeric", length = nrow(bd.interes))
+for(i in seq_len(nrow(bd.interes))) loocv.preds.2[i] <- predict(((get(workflows.min[2])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
+loocv.rmse.2 <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.2), truth = ...1, estimate = ...2)
+loocv.rmse.2$.estimate
+
 #____________________________________________________________________-
 
 # USANDO LM y no tidymodels
@@ -377,7 +377,7 @@ train.mse.age    <-with(train,mean((log_y_salary_h-mod.age)^2))
 train.mse.sexage <-with(train,mean((log_y_salary_h-mod.sexage)^2))
 train.mse.1      <-with(train,mean((log_y_salary_h-mod.1)^2))
 train.mse.2      <-with(train,mean((log_y_salary_h-mod.2)^2))
-train.mse.3      <-with(train,mean((log_y_salary_h-mod.3)^2))http://127.0.0.1:40407/graphics/plot_zoom_png?width=1920&height=1009
+train.mse.3      <-with(train,mean((log_y_salary_h-mod.3)^2))
 train.mse.4      <-with(train,mean((log_y_salary_h-mod.4)^2))
 train.mse.5      <-with(train,mean((log_y_salary_h-mod.5)^2))
 train.mse.6      <-with(train,mean((log_y_salary_h-mod.6)^2))
