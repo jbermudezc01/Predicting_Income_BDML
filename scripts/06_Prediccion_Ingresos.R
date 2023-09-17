@@ -49,8 +49,8 @@ bd.interes <- bd.interes %>%
 # rec.4,      salario ~ sexo + edad + edad^2 + maxEducLevel + estrato + hoursWorkUsual + microEmpresa +
 #                       oficio + sexo*college + sexo*salud + sexo*microEmpresa + college + salud
 # rec.5,      salario ~ sexo + edad + edad^2 + edad^3 + edad^4 + maxEducLevel  + estrato + hoursWorkUsual + 
-#                       microEmpresa + sub.transporte + sub.familiar + sub.educativo + sub.alimentacion
-# rec.6,      salario ~ todas las variables anteriores
+#                       microEmpresa + sub.transporte + sub.familiar + sub.educativo + sub.alimentacion + relab
+# rec.6,      salario ~ todas las variables anteriores + interacciones + potencia 3 y 4 de edad
 
 rec.age    <- recipe(log_y_salary_h ~ age + age2, data= bd.interes)
 
@@ -75,18 +75,18 @@ rec.3      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +
 
 rec.4      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  college + salud +
                        estrato + hoursWorkUsual + microEmpresa + oficio + sexeduc + sexsalud + sexempresa +
-                       sexformal, data= bd.interes) %>% 
+                       sexformal + relab, data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
 rec.5      <- recipe(log_y_salary_h ~ age + age2 + sex + maxEducLevel + salud + oficio + seguridadsocial +
                        estrato + hoursWorkUsual + microEmpresa + sub.transporte + sub.familiar + sub.educativo + 
-                       sub.alimentacion, data= bd.interes) %>% 
+                       sub.alimentacion + relab, data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
 rec.6      <- recipe(log_y_salary_h ~ age + age2 + age3 + age4 + sex + maxEducLevel +  
                        estrato + hoursWorkUsual + microEmpresa + sub.transporte + sub.familiar + sub.educativo + sub.alimentacion +
                        salud + seguridadsocial + college + oficio + sexeduc + sexsalud + sexempresa + sexformal +
-                       sizeFirm  + formal, data= bd.interes) %>% 
+                       sizeFirm  + formal + relab, data= bd.interes) %>% 
   step_dummy(all_nominal_predictors())
 
 # El modelo de estimacion es lineal
@@ -222,3 +222,9 @@ loocv.preds.2 <- vector("numeric", length = nrow(bd.interes))
 for(i in seq_len(nrow(bd.interes))) loocv.preds.2[i] <- predict(((get(workflows.min[2])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
 loocv.rmse.2 <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.2), truth = ...1, estimate = ...2)
 loocv.rmse.2$.estimate
+
+ggplot(df.rmse, aes(x=(1:9),y=RMSE)) +
+  geom_smooth(method = "auto", se = FALSE, color = 'red', linetype = 'solid') +
+  theme_classic()+
+  scale_x_continuous(breaks= 1:9)+
+  labs(x='Complexity', title = 'RMSE vs the complexity of a model')
