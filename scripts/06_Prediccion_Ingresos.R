@@ -270,6 +270,8 @@ if(0){
 }
 
 
+#_-------------------------------------------------------------------
+
 
 modelo8 <- lm(log_y_salary_h ~ poly(age,10, raw=T) + sex + maxEducLevel +
                 estrato + poly(hoursWorkUsual,10,raw=T) + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
@@ -281,3 +283,101 @@ rmse(test, truth = 'log_y_salary_h',estimate = predict)
 
 train$predict <- predict(modelo8, newdata = train)
 rmse(train, truth = 'log_y_salary_h',estimate = predict)
+
+
+
+
+
+#____________________________________________________________________-
+
+#
+##--------------------------------------------------
+#Modelos de entrenamiento
+mod.sex    <- lm(log_y_salary_h ~ sex, data= train)
+mod.age    <- lm(log_y_salary_h ~ age + age2, data= train)
+mod.sexage <- lm(log_y_salary_h ~ age + age2 + sex, data= train) 
+mod.1      <- lm(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                   estrato + hoursWorkUsual + microEmpresa, data= train) 
+mod.2      <- lm(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                   estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial, data=train)
+
+mod.3      <- lm(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                   estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                   sub.educativo + sub.alimentacion , data= train) 
+mod.4      <- lm(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                   estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                   sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal, data= train)
+
+mod.5      <- lm(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                   estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                   sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal + relab, data= train)
+
+mod.6      <- lm(log_y_salary_h ~ age + age2 + sex + maxEducLevel +  
+                   estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                   sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal + relab + 
+                   sizeFirm + formal, data= train)
+mod.7     <-lm(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + sex + maxEducLevel +  
+                 estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                 sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal + relab + 
+                 sizeFirm + formal, data= train)
+mod.8     <-lm(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + age6 + age7 + age8 + age9 + age10 + sex + maxEducLevel +
+  estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+  sub.educativo + sub.alimentacion  + sexeduc + sexsalud + sexempresa + sexformal + relab +
+  sizeFirm + formal, data= train)
+
+mod.9   <- lm(log_y_salary_h ~ poly(age,10, raw=T) + sex + maxEducLevel +
+                estrato + poly(hoursWorkUsual,10,raw=T) + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                sub.educativo + sub.alimentacion  + sexeduc + sexsalud + sexempresa + sexformal + relab +
+                sizeFirm + formal, data= train)
+  
+
+#Modelos de prueba, predicción:
+
+test$mod.sex<-predict(mod.sex,newdata = test)
+test$mod.age<-predict(mod.age,newdata = test)
+test$mod.sexage<-predict(mod.sexage,newdata = test)
+test$mod.1<-predict(mod.1,newdata = test)
+test$mod.2<-predict(mod.2,newdata = test)
+test$mod.3<-predict(mod.3,newdata = test)
+test$mod.4<-predict(mod.4,newdata = test)
+test$mod.5<-predict(mod.5,newdata = test)
+test$mod.6<-predict(mod.6,newdata = test)
+test$mod.7<-predict(mod.7,newdata = test)
+test$mod.8<-predict(mod.8,newdata = test)
+test$mod.9<-predict(mod.9,newdata = test)
+#Aquí no calcula el test para 4 y 5 por la variable oficio que supuestamente ahora tiene nuevas categorías, no puede predecirlas
+#las eliminaba en el paso anterior
+
+#Calculemos los MSE
+mse.sex<-with(test,mean((log_y_salary_h-mod.sex)^2))
+mse.age<-with(test,mean((log_y_salary_h-mod.age)^2))
+mse.sexage<-with(test,mean((log_y_salary_h-mod.sexage)^2))
+mse.1<-with(test,mean((log_y_salary_h-mod.1)^2))
+mse.2<-with(test,mean((log_y_salary_h-mod.2)^2))
+mse.3<-with(test,mean((log_y_salary_h-mod.3)^2))
+mse.4<-with(test,mean((log_y_salary_h-mod.4)^2))
+mse.5<-with(test,mean((log_y_salary_h-mod.5)^2))
+mse.6<-with(test,mean((log_y_salary_h-mod.6)^2))
+mse.7<-with(test,mean((log_y_salary_h-mod.7)^2))
+mse.8<-with(test,mean((log_y_salary_h-mod.8)^2))
+mse.9<-with(test,mean((log_y_salary_h-mod.9)^2))
+
+mse<-c(mse.sex,mse.age,mse.sexage,mse.1,mse.2, mse.3,mse.4,mse.5,mse.6, mse.7,mse.8, mse.9)
+df<-data.frame(model=factor(c("modelage","modelsex", "modelsexage","model 1","model 2", "model 3", "model 4",
+                              "model 5","model 6", "model 7", "model 8", "model 9"), ordered=TRUE), MSE=mse)
+df$RMSE<-sqrt(df$MSE)
+
+R2<-c(r2.sex<-summary(mod.sex)$r.squared,
+      r2.age<-summary(mod.age)$r.squared,
+      r2.sexage<-summary(mod.sexage)$r.squared,
+      r2.mod1<-summary(mod.1)$r.squared,
+      r2.mod2<-summary(mod.2)$r.squared,
+      r2.mod3<-summary(mod.3)$r.squared,
+      r2.mod4<-summary(mod.4)$r.squared,
+      r2.mod5<-summary(mod.5)$r.squared,
+      r2.mod6<-summary(mod.6)$r.squared,
+      r2.mod7<-summary(mod.7)$r.squared,
+      r2.mod8<-summary(mod.8)$r.squared,
+      r2.mod9<-summary(mod.9)$r.squared)
+complejidad<-c(1:12)
+df<-data.frame(complejidad,df,R2)
