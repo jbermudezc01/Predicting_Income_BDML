@@ -354,6 +354,10 @@ R2<-c(r2.sex<-summary(mod.sex)$r.squared,
 complejidad<-c(1:11)
 df<-data.frame(complejidad,df,R2)
 
+# Errores  ----------------------------------------------------------------
+# El modelo con menor RMSE fue el modelo <mod6> por lo que vamos a ver la distribución de los errores
+errores.mod6 <- (test$log_y_salary_h - test$mod.6)
+plot(density(errores.mod6),lwd=3, main='Errores de predicción modelo 6', ylab='Densidad')
 
 # RMSE para dato de entrenamiento -----------------------------------------
 

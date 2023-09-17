@@ -26,9 +26,9 @@ bd.sin.na <- bd.sin.na %>%
 
 # ajustar variable maxEduc
 # Calcula la media de la variable
-media <- mean(df_gap_no$maxEducLevel, na.rm = TRUE)
+media <- mean(bd.sin.na$maxEducLevel, na.rm = TRUE)
 # Imputa la media a los valores faltantes en la columna
-df_gap_no$maxEducLevel[is.na(df_gap_no$maxEducLevel)] <- media
+bd.sin.na$maxEducLevel[is.na(bd.sin.na$maxEducLevel)] <- media
 # ajustar estrato 
 estrato_na<- model.matrix(~ bd.media.imputada$estrato - 1, data = bd.media.imputada)
 bd.media.imputada <- cbind(bd.media.imputada, estrato_na)
@@ -41,8 +41,6 @@ colnames(bd.sin.na)[colnames(bd.sin.na) == "bd.sin.na$estrato1"] <- "estrato_soc
 # Cambio nombre base datos para mejor manejo ------------------------------
 df_gap_na <- bd.media.imputada
 df_gap_no <- bd.sin.na
-
-
 
 # Regresion brecha de genero no condicional -------------------------------
 
@@ -108,14 +106,14 @@ df_gap_no <- df_gap_no %>% mutate(sex=as.numeric(sex),
 
 df_gap_no <- df_gap_no %>%
   mutate(sex_residual = lm(sex ~ sex+age+age2+college+
-                             formal+estrato_socioeco+hoursWorkUsual+microEmpresa, , data = .)$residuals)
+                             formal+estrato_socioeco+hoursWorkUsual+microEmpresa, data = .)$residuals)
 
 
 # hacer una regresión con la variable y=log_y_salary_h en X2-X8 y tomar los residuos
 
 df_gap_no <- df_gap_no %>%
   mutate(salary_residual = lm(log_y_salary_h ~ age+age2+college+
-                                formal+estrato_socioeco+hoursWorkUsual+microEmpresa, , data = .)$residuals)
+                                formal+estrato_socioeco+hoursWorkUsual+microEmpresa, data = .)$residuals)
 
 # hacer una regresión entre salary_residual y sex_residual 
 reg.3.1 <- lm(salary_residual ~ sex_residual, data = df_gap_no )

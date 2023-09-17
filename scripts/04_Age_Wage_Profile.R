@@ -95,6 +95,8 @@ peak_age_i_vector<-rep(0,B)
 lower_i<-rep(0,B)
 upper_i<-rep(0,B)
 
+# Generar semilla para reproducibilidad
+set.seed(123)
 for(i in 1:B){
   db_sample<- sample_frac(bd.media.imputada,size=1,replace=TRUE) #takes a sample with replacement of the same size of the original sample (1 or 100%)
   f<-lm(log_y_salary_h~age+age2,db_sample)# estimates the models
@@ -113,8 +115,6 @@ for(i in 1:B){
   lower_i[i]<- peak_age_i_vector[i]-qnorm(0.05/2)*SE_peakage_i
   upper_i[i]<- peak_age_i_vector[i]+qnorm(0.05/2)*SE_peakage_i
 }
-
-
 
 #----Para base de datos eliminando NA-----
 coef_sin_na
@@ -147,9 +147,6 @@ for(i in 1:B){
   lower_s[i]<- peak_age_s_vector[i]-qnorm(0.05/2)*0.8302136
   upper_s[i]<- peak_age_s_vector[i]+qnorm(0.05/2)*SE_peakage_s
 }
-
-
-
 
 ##------------Bootstrap automático:
 p_load("boot")
