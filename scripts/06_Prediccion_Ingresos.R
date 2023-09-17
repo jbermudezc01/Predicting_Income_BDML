@@ -31,7 +31,10 @@ factonum <- function(x){
 }
 bd.interes <- bd.interes %>% 
   mutate(age2 = age^2, age3 = age^3, age4 = age^4, age5 = age^5, age6 = age^6, age7 = age^7, age8 = age^8, 
-         age9 = age^9, age10 = age^10,
+         age9 = age^9, age10 = age^10, hoursWorkUsual2 = hoursWorkUsual^2, hoursWorkUsual3 = hoursWorkUsual^3 , 
+         hoursWorkUsual4 = hoursWorkUsual^4, hoursWorkUsual5 = hoursWorkUsual^5, hoursWorkUsual6 =hoursWorkUsual^6,
+         hoursWorkUsual7 = hoursWorkUsual^7, hoursWorkUsual8 = hoursWorkUsual^8, hoursWorkUsual9 = hoursWorkUsual^9,
+         hoursWorkUsual10 = hoursWorkUsual^10,
          sexeduc = factonum(sex)*factonum(college), sexsalud = factonum(sex)*factonum(salud),
          sexempresa = factonum(sex)*factonum(microEmpresa), sexformal = factonum(sex)*factonum(formal)) %>% 
   mutate_at(c('sexeduc','sexsalud','sexempresa'),as.factor)
@@ -99,7 +102,9 @@ rec.7      <- recipe(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + sex + ma
   step_dummy(all_nominal_predictors())
 
 rec.8      <- recipe(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + age6 + age7 + age8 + age9 + age10 + sex + maxEducLevel +
-                       estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
+                       estrato + hoursWorkUsual + hoursWorkUsual2 +hoursWorkUsual3 +hoursWorkUsual4+hoursWorkUsual5 +hoursWorkUsual6 +
+                       hoursWorkUsual7 + hoursWorkUsual8 + hoursWorkUsual9 + hoursWorkUsual10 + microEmpresa + salud + seguridadsocial + 
+                       sub.transporte + sub.familiar +
                        sub.educativo + sub.alimentacion  + sexeduc + sexsalud + sexempresa + sexformal + relab +
                        sizeFirm + formal, data= bd.interes) %>%
   step_dummy(all_nominal_predictors())
@@ -244,10 +249,10 @@ df.rmse <- data.frame('Workflow' = c('wf.sex','wf.age','wf.agesex',paste0('wf.',
                       'RMSE' = c(rmse.sex, rmse.age, rmse.sexage,unlist(mget(paste0('rmse.',1:8))) ))
 df.rmse <- df.rmse %>% mutate(MSE = RMSE^2)
 
+
+# Las dos recetas que minimizan el RMSE son :
+workflows.min <- df.rmse$Workflow[order(df.rmse$RMSE)[1:2]]
 if(0){
-  # Las dos recetas que minimizan el RMSE son :
-  workflows.min <- df.rmse$Workflow[order(df.rmse$RMSE)[1:2]]
-  
   # LOOCV -------------------------------------------------------------------
   # Para las dos recetas que minimizaron el simple CV vamos a realizar LOOCV
   # Primero para el que minimizo el RMSE en el CV
@@ -261,36 +266,10 @@ if(0){
   for(i in seq_len(nrow(bd.interes))) loocv.preds.2[i] <- predict(((get(workflows.min[2])) %>% fit(data = bd.interes[-i, ])), new_data = slice(bd.interes, i))$.pred
   loocv.rmse.2 <- rmse(bind_cols(bd.interes$log_y_salary_h, loocv.preds.2), truth = ...1, estimate = ...2)
   loocv.rmse.2$.estimate
-  
-  ggplot(df.rmse, aes(x=(1:11),y=RMSE)) +
-    geom_line(method = "auto", se = FALSE, color = 'red', linetype = 'solid') +
-    theme_classic()+
-    scale_x_continuous(breaks= 1:11)+
-    labs(x='Complexity', title = 'RMSE vs the complexity of a model')
 }
-
-
-#_-------------------------------------------------------------------
-
-
-modelo8 <- lm(log_y_salary_h ~ poly(age,10, raw=T) + sex + maxEducLevel +
-                estrato + poly(hoursWorkUsual,10,raw=T) + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
-                sub.educativo + sub.alimentacion  + sexeduc + sexsalud + sexempresa + sexformal + relab +
-                sizeFirm + formal, data= train)
-
-test$predict <- predict(modelo8, newdata = test)
-rmse(test, truth = 'log_y_salary_h',estimate = predict)
-
-train$predict <- predict(modelo8, newdata = train)
-rmse(train, truth = 'log_y_salary_h',estimate = predict)
-
-
-
-
-
 #____________________________________________________________________-
 
-#
+# USANDO LM y no tidymodels
 ##--------------------------------------------------
 #Modelos de entrenamiento
 mod.sex    <- lm(log_y_salary_h ~ sex, data= train)
@@ -320,10 +299,6 @@ mod.7     <-lm(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + sex + maxEducL
                  estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
                  sub.educativo + sub.alimentacion + sexeduc + sexsalud + sexempresa + sexformal + relab + 
                  sizeFirm + formal, data= train)
-mod.8     <-lm(log_y_salary_h ~ age + age2 + age3 + age4 + age5 + age6 + age7 + age8 + age9 + age10 + sex + maxEducLevel +
-  estrato + hoursWorkUsual + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
-  sub.educativo + sub.alimentacion  + sexeduc + sexsalud + sexempresa + sexformal + relab +
-  sizeFirm + formal, data= train)
 
 mod.9   <- lm(log_y_salary_h ~ poly(age,10, raw=T) + sex + maxEducLevel +
                 estrato + poly(hoursWorkUsual,10,raw=T) + microEmpresa + salud + seguridadsocial + sub.transporte + sub.familiar +
@@ -331,8 +306,8 @@ mod.9   <- lm(log_y_salary_h ~ poly(age,10, raw=T) + sex + maxEducLevel +
                 sizeFirm + formal, data= train)
   
 
-#Modelos de prueba, predicción:
 
+# Modelos de prueba prediccion --------------------------------------------
 test$mod.sex<-predict(mod.sex,newdata = test)
 test$mod.age<-predict(mod.age,newdata = test)
 test$mod.sexage<-predict(mod.sexage,newdata = test)
@@ -343,7 +318,6 @@ test$mod.4<-predict(mod.4,newdata = test)
 test$mod.5<-predict(mod.5,newdata = test)
 test$mod.6<-predict(mod.6,newdata = test)
 test$mod.7<-predict(mod.7,newdata = test)
-test$mod.8<-predict(mod.8,newdata = test)
 test$mod.9<-predict(mod.9,newdata = test)
 #Aquí no calcula el test para 4 y 5 por la variable oficio que supuestamente ahora tiene nuevas categorías, no puede predecirlas
 #las eliminaba en el paso anterior
@@ -359,12 +333,11 @@ mse.4<-with(test,mean((log_y_salary_h-mod.4)^2))
 mse.5<-with(test,mean((log_y_salary_h-mod.5)^2))
 mse.6<-with(test,mean((log_y_salary_h-mod.6)^2))
 mse.7<-with(test,mean((log_y_salary_h-mod.7)^2))
-mse.8<-with(test,mean((log_y_salary_h-mod.8)^2))
 mse.9<-with(test,mean((log_y_salary_h-mod.9)^2))
 
-mse<-c(mse.sex,mse.age,mse.sexage,mse.1,mse.2, mse.3,mse.4,mse.5,mse.6, mse.7,mse.8, mse.9)
+mse<-c(mse.sex,mse.age,mse.sexage,mse.1,mse.2, mse.3,mse.4,mse.5,mse.6, mse.7, mse.9)
 df<-data.frame(model=factor(c("modelage","modelsex", "modelsexage","model 1","model 2", "model 3", "model 4",
-                              "model 5","model 6", "model 7", "model 8", "model 9"), ordered=TRUE), MSE=mse)
+                              "model 5","model 6", "model 7", "model 8"), ordered=TRUE), MSE=mse)
 df$RMSE<-sqrt(df$MSE)
 
 R2<-c(r2.sex<-summary(mod.sex)$r.squared,
@@ -377,7 +350,49 @@ R2<-c(r2.sex<-summary(mod.sex)$r.squared,
       r2.mod5<-summary(mod.5)$r.squared,
       r2.mod6<-summary(mod.6)$r.squared,
       r2.mod7<-summary(mod.7)$r.squared,
-      r2.mod8<-summary(mod.8)$r.squared,
       r2.mod9<-summary(mod.9)$r.squared)
-complejidad<-c(1:12)
+complejidad<-c(1:11)
 df<-data.frame(complejidad,df,R2)
+
+
+# RMSE para dato de entrenamiento -----------------------------------------
+
+train$mod.sex<-predict(mod.sex,newdata = train)
+train$mod.age<-predict(mod.age,newdata = train)
+train$mod.sexage<-predict(mod.sexage,newdata = train)
+train$mod.1<-predict(mod.1,newdata = train)
+train$mod.2<-predict(mod.2,newdata = train)
+train$mod.3<-predict(mod.3,newdata = train)
+train$mod.4<-predict(mod.4,newdata = train)
+train$mod.5<-predict(mod.5,newdata = train)
+train$mod.6<-predict(mod.6,newdata = train)
+train$mod.7<-predict(mod.7,newdata = train)
+train$mod.9<-predict(mod.9,newdata = train)
+#Aquí no calcula el test para 4 y 5 por la variable oficio que supuestamente ahora tiene nuevas categorías, no puede predecirlas
+#las eliminaba en el paso anterior
+
+#Calculemos los MSE
+train.mse.sex    <-with(train,mean((log_y_salary_h-mod.sex)^2))
+train.mse.age    <-with(train,mean((log_y_salary_h-mod.age)^2))
+train.mse.sexage <-with(train,mean((log_y_salary_h-mod.sexage)^2))
+train.mse.1      <-with(train,mean((log_y_salary_h-mod.1)^2))
+train.mse.2      <-with(train,mean((log_y_salary_h-mod.2)^2))
+train.mse.3      <-with(train,mean((log_y_salary_h-mod.3)^2))http://127.0.0.1:40407/graphics/plot_zoom_png?width=1920&height=1009
+train.mse.4      <-with(train,mean((log_y_salary_h-mod.4)^2))
+train.mse.5      <-with(train,mean((log_y_salary_h-mod.5)^2))
+train.mse.6      <-with(train,mean((log_y_salary_h-mod.6)^2))
+train.mse.7      <-with(train,mean((log_y_salary_h-mod.7)^2))
+train.mse.9      <-with(train,mean((log_y_salary_h-mod.9)^2))
+
+train.mse <- c(train.mse.sex,train.mse.age,train.mse.sexage,train.mse.1,train.mse.2, train.mse.3,train.mse.4,train.mse.5,train.mse.6, train.mse.7, train.mse.9)
+df.train  <-data.frame(model=factor(c("modelage","modelsex", "modelsexage","model 1","model 2", "model 3", "model 4",
+                              "model 5","model 6", "model 7", "model 8"), ordered=TRUE), MSE= train.mse)
+df.train$RMSE<-sqrt(df.train$MSE)
+df.train$complejidad <- complejidad
+
+# Graficas MSE  -----------------------------------------------------------
+
+plot(df.train$RMSE, type='lines',col='red', xlab = 'Complejidad', ylab='RMSE', main = 'RMSE train vs RMSE test'); lines(df$RMSE, type='lines', col='blue')
+legend("topright", legend=c("Train RMSE", "Test RMSE"), col=c("red", "blue"), lty=1)
+axis(1, at = 1:11)
+
