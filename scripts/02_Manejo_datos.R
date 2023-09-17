@@ -123,7 +123,7 @@ bd.media.imputada <- bd.media.imputada %>%
 # Cambiar variables a factor ----------------------------------------------
 variables.factor <- c('college','cotPension','cuentaPropia','estrato','formal','maxEducLevel','oficio',
                       'salud','seguridadsocial','sex','microEmpresa','sizeFirm','sub.alimentacion','sub.transporte',
-                      'sub.familiar','sub.educativo')
+                      'sub.familiar','sub.educativo', 'relab')
 bd.sin.na <- bd.sin.na %>%
   mutate_at(variables.factor, as.factor)
 bd.media.imputada <- bd.media.imputada %>%
