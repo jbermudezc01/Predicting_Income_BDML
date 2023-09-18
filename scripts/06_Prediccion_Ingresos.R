@@ -319,8 +319,6 @@ test$mod.5<-predict(mod.5,newdata = test)
 test$mod.6<-predict(mod.6,newdata = test)
 test$mod.7<-predict(mod.7,newdata = test)
 test$mod.9<-predict(mod.9,newdata = test)
-#Aquí no calcula el test para 4 y 5 por la variable oficio que supuestamente ahora tiene nuevas categorías, no puede predecirlas
-#las eliminaba en el paso anterior
 
 #Calculemos los MSE
 mse.sex<-with(test,mean((log_y_salary_h-mod.sex)^2))
@@ -372,8 +370,7 @@ train$mod.5<-predict(mod.5,newdata = train)
 train$mod.6<-predict(mod.6,newdata = train)
 train$mod.7<-predict(mod.7,newdata = train)
 train$mod.9<-predict(mod.9,newdata = train)
-#Aquí no calcula el test para 4 y 5 por la variable oficio que supuestamente ahora tiene nuevas categorías, no puede predecirlas
-#las eliminaba en el paso anterior
+
 
 #Calculemos los MSE
 train.mse.sex    <-with(train,mean((log_y_salary_h-mod.sex)^2))
