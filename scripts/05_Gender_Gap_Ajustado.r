@@ -233,8 +233,7 @@ edad_pico_m_n # 47.6
 
 ### intervalos para edad pico mujeres 
 p_load("boot")
-#
-boot(data, statistic, R)
+#boot(data, statistic, R)
 funcion_pa_sex<-function(data,index){
   b1<-coef(lm(log_y_salary_h~age+age2+college+
                 formal+estrato_socioeco+hoursWorkUsual+microEmpresa, data = data, subset = index))[2]
