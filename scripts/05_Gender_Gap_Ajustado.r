@@ -172,7 +172,7 @@ edad_salario_w <- lm(log_y_salary_h ~age+age2+college+
                        formal+estrato_socioeco+hoursWorkUsual+microEmpresa, data = sub_set_sex, x = TRUE)
 
 # Estimar con Na eliminados
-su_set_sex <- subset(df_gap_no, sex == "1")
+su_set_sex <- subset(df_gap_no, sex == "0")
 edad_salario_w_no <- lm(log_y_salary_h ~age+age2+college+
                           formal+estrato_socioeco+hoursWorkUsual+microEmpresa,, data = su_set_sex, x = TRUE)
 
@@ -204,7 +204,7 @@ edad_salario_m <- lm(log_y_salary_h ~age+age2+college+
                        formal+estrato_socioeco+hoursWorkUsual+microEmpresa,, data = sub_set_m, x = TRUE)
 
 # Estimar con Na eliminados
-su_set_m <- subset(df_gap_no, sex == "2")
+su_set_m <- subset(df_gap_no, sex == "1")
 edad_salario_m_no <- lm(log_y_salary_h ~age+age2+college+
                           formal+estrato_socioeco+hoursWorkUsual+microEmpresa,, data = su_set_m, x = TRUE)
 
