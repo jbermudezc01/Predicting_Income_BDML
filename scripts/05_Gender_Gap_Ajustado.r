@@ -248,6 +248,7 @@ funcion_pa_sex(sub_set_sex, 1:nrow(sub_set_sex))
 
 
 #Hacemos el boot de forma automática con nuestra función
+set.seed(123) # sembrar semilla 
 boot_s<-boot(su_set_sex, funcion_pa_sex, R=2000) # base de datos sin na
 
 #Creación del dataframe para generar los intervalos de confianza:
@@ -263,6 +264,7 @@ i_c_w$l_s_s<-boot_s[["t"]]+qnorm(0.05/2)*se_s
 # intervalos de confianza para los hombres
 
 #Hacemos el boot de forma automática con nuestra función
+set.seed(123) # sembrar la semilla 
 boot_y<-boot(su_set_m, funcion_pa_sex, R=2000) # base de datos sin na
 
 #Creación del dataframe para generar los intervalos de confianza:
