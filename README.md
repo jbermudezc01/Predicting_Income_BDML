@@ -1,18 +1,10 @@
-# Problem Set Template Repository for Big Data and Machine Learning for Applied Economics
+# Repositorio Taller #1 Bautista, Bermudez, Escobar, Mesa BDML
 
-This is the template repository for the problem sets.
+El siguiente repositorio contiene los codigos, imagenes, bases de datos y el documento final del primer taller de Big Data y Machine Learning para Economia Aplicada de los estudiantes Lina Maria Bautista Salcedo, Juan Pablo Bermudez Cespedes, Pharad Sebastian Escobar y Esteban Mesa Gomez.
 
-The repo should contain at least four folders:
+El repositorio contiene las siguientes carpetas:
 
-- `document`: contains your final document in `pdf` format. Ideally, the document should pull figures and tables directly from the `views` folder. I've included a latex template I created for the Thesis Seminar. 
-- `scripts`: contains all your scripts
-- `stores`: contains all the data sets used. If files are "too big" for GitHub, include a document describing where people can access the data.
-- `views`: contains all figures and tables
-
-
-
-## Some general reminders: 
-
-- It is essential how you write up the document. Be sure to be organized and consistent in explaining your equations and findings. Make sure that there are no compilation errors.
-- Write understandable code, separating and commenting on each section. Coding, like in writing, style is critical for readability. If the code is well written, it should be self-contained. There is no need to write everything you did. I encourage you to follow the [tidyverse style guide](https://style.tidyverse.org/)
-
+- `document`: contiene el documento final en formato `pdf`. No contamos con el archivo `.tex`, pero aun asi se aseguro que todas las imagenes en el `pdf` estuvieran tambien en la carpeta `views`.
+- `scripts`: contiene todos los scripts utilizados para el trabajo, completamente reproducibles. La mayoria de los codigos son en lenguaje `R`, a excepcion de los codigos de estadisticas descriptivas, los cuales estan en lenguaje `python`.
+- `stores`: contiene todas las bases de datos usadas, principalmente en formato `.RData`, para poder asegurar que los demas codigos utilizaran la estructura adecuada de las bases de datos. Tambien se encuentran dos bases de datos en formato `csv`, ya que de este modo era mas facil hacer las estadisticas descriptivas en `python`, pero de cualquier modo, los codigos en lenguaje `R` utilizan las bases en formato `.RData`
+- `views`: contiene todas las imagenes que se encuentran en el pdf.
